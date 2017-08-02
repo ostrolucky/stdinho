@@ -1,0 +1,19 @@
+{
+    "name": "ostrolucky/stdin-file-server",
+    "description": "Opens HTTP portal to your stdin stream",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gabriel Ostrolucký",
+            "email": "gabriel.ostrolucky@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": { "Ostrolucky\\StdinFileServer\\": "src" }
+    },
+    "require": {
+        "amphp/aerys": "dev-master",
+        "rdlowrey/auryn": "^1.4"
+    }
+}
