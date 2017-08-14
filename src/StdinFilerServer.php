@@ -11,25 +11,43 @@ class StdinFilerServer {
     }
 }
 
-$injector = new \Auryn\Injector();
-$injector
-    ->alias(Aerys\HttpDriver::class, Aerys\Http1Driver::class)
-    ->alias(Psr\Log\LoggerInterface::class, Aerys\ConsoleLogger::class)
-//    ->alias(Psr\Log\LoggerInterface::class, Psr\Log\NullLogger::class)
-    ->share($logger = $injector->make(Psr\Log\LoggerInterface::class))
-    ->share($vhostContainer = $injector->make(Aerys\VhostContainer::class))
-    ->share($server = $injector->make(Aerys\Server::class))
-;
+$container = (new DI\ContainerBuilder())->addDefinitions([
+    \Aerys\HttpDriver::class => DI\object(\Aerys\Http1Driver::class),
+    \Psr\Log\LoggerInterface::class => DI\object(\Aerys\ConsoleLogger::class),
+])->build();
 
-$responder = function(Aerys\Request $req, Aerys\Response $resp) use ($logger, $handle) {
-    $logger->info(sprintf('%s connected', $req->getConnectionInfo()['server_addr']));
+$logger = $container->get(\Psr\Log\LoggerInterface::class);
+$vhostContainer = $container->get(\Aerys\VhostContainer::class);
+$server = $container->get(\Aerys\Server::class);
+
+stream_set_blocking(STDIN, false);
+
+$handle = tmpfile();
+$tmpFilePath = $tmpFilePath = stream_get_meta_data($handle)['uri'];
+
+Amp\Loop::onReadable(STDIN, function($watcherId, $stream) use ($handle, $logger) {
+    if (!$data = fread($stream, 4086)) {
+        Amp\Loop::cancel($watcherId);
+        $logger->info('Stdin transfer done');
+    }
+
+    fputs($handle, $data);
+});
+
+$responder = function(Aerys\Request $req, Aerys\Response $resp) use ($logger, $tmpFilePath) {
+    $ip = $req->getConnectionInfo()['server_addr'];
+    $logger->info(sprintf('%s connected', $ip));
+
+    $resp->setHeader('content-type', 'application/octet-stream');
 
     /** @var \Amp\File\Handle $handle */
-    $handle = yield Amp\File\open('/media/gadelat/sdata/Downloads/Arrival.2016 .720p.HDRip.950MB.MkvCage.mkv', 'r');
+    $handle = yield Amp\File\open($tmpFilePath, 'r');
 
     while (null !== $chunk = yield $handle->read()) {
         yield $resp->write($chunk);
     }
+
+    $logger->info(sprintf('%s finished downloading', $ip));
 };
 
 $vhostContainer->use(new Aerys\Vhost('', [["0.0.0.0", 1337]], $responder, []));
