@@ -28,8 +28,10 @@ Amp\Loop::onReadable(STDIN, function($watcherId, $stream) use ($handle, $logger)
 });
 
 $responder = function(Aerys\Request $req, Aerys\Response $resp) use ($logger, $tmpFilePath) {
-    $ip = $req->getConnectionInfo()['server_addr'];
-    $logger->info(sprintf('%s connected', $ip));
+    $connectionInfo = $req->getConnectionInfo();
+    $client = sprintf("%s:%s", $connectionInfo['client_addr'], $connectionInfo['client_port']);
+
+    $logger->info("$client started download");
 
     $resp->setHeader('content-type', 'application/octet-stream');
 
@@ -40,7 +42,7 @@ $responder = function(Aerys\Request $req, Aerys\Response $resp) use ($logger, $t
         yield $resp->write($chunk);
     }
 
-    $logger->info(sprintf('%s finished downloading', $ip));
+    $logger->info("$client finished download");
 };
 
 $server = Aerys\initServer($logger, [(new \Aerys\Host)->expose('*', 1337)->use($responder)], ['debug' => true]);
