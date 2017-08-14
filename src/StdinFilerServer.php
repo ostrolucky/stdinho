@@ -11,15 +11,8 @@ class StdinFilerServer {
     }
 }
 
-$container = (new DI\ContainerBuilder())->addDefinitions([
-    \Aerys\HttpDriver::class => DI\object(\Aerys\Http1Driver::class),
-    \Psr\Log\LoggerInterface::class => DI\object(\Aerys\ConsoleLogger::class),
-])->build();
-
-$logger = $container->get(\Psr\Log\LoggerInterface::class);
-$vhostContainer = $container->get(\Aerys\VhostContainer::class);
-$server = $container->get(\Aerys\Server::class);
-
+$container = \DI\ContainerBuilder::buildDevContainer();
+$logger = $container->get(\Aerys\ConsoleLogger::class);
 stream_set_blocking(STDIN, false);
 
 $handle = tmpfile();
@@ -50,7 +43,7 @@ $responder = function(Aerys\Request $req, Aerys\Response $resp) use ($logger, $t
     $logger->info(sprintf('%s finished downloading', $ip));
 };
 
-$vhostContainer->use(new Aerys\Vhost('', [["0.0.0.0", 1337]], $responder, []));
+$server = Aerys\initServer($logger, [(new \Aerys\Host)->expose('*', 1337)->use($responder)], ['debug' => true]);
 
 Amp\Loop::run(function() use ($server) {
     yield \Amp\call(function() use ($server) {
