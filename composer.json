@@ -9,11 +9,12 @@
             "email": "gabriel.ostrolucky@gmail.com"
         }
     ],
+    "bin": ["bin/stdin-fileserver"],
     "autoload": {
         "psr-4": { "Ostrolucky\\StdinFileServer\\": "src" }
     },
     "require": {
         "amphp/aerys": "dev-master",
-        "php-di/php-di": "^5.4"
+        "symfony/console": "^3.3"
     }
 }

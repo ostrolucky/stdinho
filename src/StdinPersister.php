@@ -20,8 +20,8 @@ class StdinPersister
     public function __invoke($watcherId, $stream)
     {
         if (feof(STDIN)) {
+            $this->logger->debug('Stdin transfer done');
             Loop::cancel($watcherId);
-            $this->logger->info('Stdin transfer done');
             return;
         }
 

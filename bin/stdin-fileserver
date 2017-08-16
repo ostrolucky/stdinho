@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+use Aerys\Console;
+use Aerys\ConsoleLogger;
+use Aerys\Host;
+use League\CLImate\CLImate;
+use Ostrolucky\StdinFileServer\Responder;
+use Ostrolucky\StdinFileServer\StdinPersister;
+use Symfony\Component\Console\Output\OutputInterface;
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+(new \Symfony\Component\Console\Application())
+	->register('stdin-fileserver')
+	->setDescription('Serve stdin over HTTP')
+	->setCode(function(\Symfony\Component\Console\Input\InputInterface $input, OutputInterface $output) {
+		$logger = new ConsoleLogger(new Console(new CLImate()));
+		$stdinPersister = new StdinPersister($logger);
+		$responder = new Responder($logger, $stdinPersister->getHandleFilePath());
+		$server = Aerys\initServer($logger, [(new Host)->expose('*', 1337)->use($responder)]);
+
+		Amp\Loop::onReadable(STDIN, $stdinPersister);
+		Amp\Loop::run(function() use ($server) {
+			yield \Amp\call(function() use ($server) {
+				yield $server->start();
+			});
+		});
+	})
+	->getApplication()
+	->setDefaultCommand('stdin-fileserver', true)
+	->run();

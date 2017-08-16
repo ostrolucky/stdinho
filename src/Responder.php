@@ -35,6 +35,7 @@ class Responder
             yield $response->write($chunk);
         }
 
+        $handle->end();
         $this->logger->info("$client finished download");
     }
 }
