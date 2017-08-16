@@ -2,6 +2,7 @@
 
 namespace Ostrolucky\StdinFileServer;
 
+use Aerys\ClientException;
 use Aerys\Request;
 use Aerys\Response;
 use Amp\File\Handle;
@@ -32,7 +33,12 @@ class Responder
         $handle = yield open($this->outputFilePath, 'r');
 
         while (null !== $chunk = yield $handle->read()) {
-            yield $response->write($chunk);
+            try {
+                yield $response->write($chunk);
+            } catch (ClientException $exception) {
+                $this->logger->info("$client aborted download");
+                throw $exception;
+            }
         }
 
         $handle->end();
