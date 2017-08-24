@@ -15,6 +15,11 @@ require_once __DIR__.'/../vendor/autoload.php';
 	->register('stdin-fileserver')
 	->setDescription('Serve stdin over HTTP')
 	->setCode(function(\Symfony\Component\Console\Input\InputInterface $input, OutputInterface $output) {
+		// TODO: Show help instead of throwing exception
+		if (ftell(STDIN) === false) {
+			throw new \RuntimeException('Please pipe stdin into stdin-fileserver');
+		}
+
 		$logger = new ConsoleLogger(new Console(new CLImate()));
 		$stdinPersister = new StdinPersister($logger);
 		$responder = new Responder($logger, $stdinPersister->getHandleFilePath());
