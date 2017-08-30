@@ -16,7 +16,7 @@ require_once __DIR__.'/../vendor/autoload.php';
 	->setDescription('Serve stdin over HTTP')
 	->setCode(function(InputInterface $input, OutputInterface $output) {
 		// TODO: Show help instead of throwing exception
-		if (ftell(STDIN) === false) {
+		if (ftell($stdin = STDIN) === false) {
 			throw new \RuntimeException('Please pipe stdin into stdin-fileserver');
 		}
 
@@ -26,7 +26,7 @@ require_once __DIR__.'/../vendor/autoload.php';
 		$stdinPersister = new StdinPersister($logger->pushHandler($consoleHandler));
         $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $stdinPersister->getHandleFilePath()));
 
-        Amp\Loop::onReadable(STDIN, $stdinPersister);
+        Amp\Loop::onReadable($stdin, $stdinPersister);
         Amp\Loop::run(function() use ($clientHandler, $output) {
             $server = Amp\socket\listen('127.0.1:1337');
             $output->writeln('Open your browser and visit http://' . $server->getAddress());
