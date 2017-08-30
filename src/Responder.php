@@ -2,17 +2,16 @@
 
 namespace Ostrolucky\StdinFileServer;
 
-use Aerys\ClientException;
-use Aerys\Request;
-use Aerys\Response;
+use Amp\ByteStream\StreamException;
 use Amp\File\Handle;
+use Amp\Socket\Socket;
 use Psr\Log\LoggerInterface;
-use function Amp\File\open;
 
 class Responder
 {
     private $logger;
     private $outputFilePath;
+    private $contentType;
 
     public function __construct(LoggerInterface $logger, $outputFilePath)
     {
@@ -20,28 +19,33 @@ class Responder
         $this->outputFilePath = $outputFilePath;
     }
 
-    public function __invoke(Request $request, Response $response)
+    public function __invoke(Socket $socket)
     {
-        $connectionInfo = $request->getConnectionInfo();
-        $client = sprintf("%s:%s", $connectionInfo['client_addr'], $connectionInfo['client_port']);
+        $remoteAddress = $socket->getRemoteAddress();
+        $this->logger->info("Accepted connection from $remoteAddress");
 
-        $this->logger->info("$client started download");
-
-        $response->setHeader('content-type', 'application/octet-stream');
+        if ($this->contentType === null) {
+            $this->contentType = mime_content_type($this->outputFilePath);
+            $this->logger->debug("Content-type detected: $this->contentType");
+        }
 
         /** @var Handle $handle */
-        $handle = yield open($this->outputFilePath, 'r');
+        $handle = yield \Amp\File\open($this->outputFilePath, 'r');
 
-        while (null !== $chunk = yield $handle->read()) {
-            try {
-                yield $response->write($chunk);
-            } catch (ClientException $exception) {
-                $this->logger->info("$client aborted download");
-                throw $exception;
-            }
+        yield $socket->write("HTTP/1.1 200 OK\nContent-Type: $this->contentType\n\n");
+
+        try {
+            while (null !== $chunk = yield $handle->read()) {
+//                echo strlen($chunk).PHP_EOL;
+                yield $socket->write($chunk);
+            };
+            $this->logger->info("$remoteAddress finished download");
+        } catch (StreamException $exception) {
+            $this->logger->info("$remoteAddress aborted download");
         }
 
         $handle->end();
-        $this->logger->info("$client finished download");
+        $socket->end();
+
     }
 }
