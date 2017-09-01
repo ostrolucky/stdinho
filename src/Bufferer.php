@@ -13,6 +13,7 @@ class Bufferer
 
     private $mimeType;
     private $filePath;
+    private $buffering = true;
 
     public function __construct(LoggerInterface $logger, $resource)
     {
@@ -26,6 +27,7 @@ class Bufferer
 
         if (feof($stream)) {
             $this->logger->debug('Stdin transfer done');
+            $this->buffering = false;
             Loop::cancel($watcherId);
             return;
         }
@@ -46,13 +48,18 @@ class Bufferer
         }
     }
 
-    public function getFilePath()
+    public function getFilePath(): string
     {
         return $this->filePath;
     }
 
-    public function getMimeType()
+    public function getMimeType(): string
     {
         return $this->mimeType;
+    }
+
+    public function isBuffering(): bool
+    {
+        return $this->buffering;
     }
 }

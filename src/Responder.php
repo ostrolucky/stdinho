@@ -10,12 +10,12 @@ use Psr\Log\LoggerInterface;
 class Responder
 {
     private $logger;
-    private $stdinPersister;
+    private $bufferer;
 
-    public function __construct(LoggerInterface $logger, Bufferer $stdinPersister)
+    public function __construct(LoggerInterface $logger, Bufferer $bufferer)
     {
         $this->logger = $logger;
-        $this->stdinPersister = $stdinPersister;
+        $this->bufferer = $bufferer;
     }
 
     public function __invoke(Socket $socket)
@@ -24,12 +24,17 @@ class Responder
         $this->logger->info("Accepted connection from $remoteAddress");
 
         /** @var Handle $handle */
-        $handle = yield \Amp\File\open($this->stdinPersister->getFilePath(), 'r');
+        // FIXME Path will be null if buffer didn't manage to write enough data yet. Use Promise?
+        $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'r');
 
-        yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", $this->stdinPersister->getMimeType()));
+        yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", $this->bufferer->getMimeType()));
 
         try {
-            while (null !== $chunk = yield $handle->read()) {
+            while ($chunk = yield $handle->read() or $this->bufferer->isBuffering()) {
+                // we reached end of the buffer, but it's still buffering
+                if ($chunk === null) {
+                    continue;
+                }
 //                echo strlen($chunk).PHP_EOL;
                 yield $socket->write($chunk);
             };
