@@ -27,7 +27,7 @@ require_once __DIR__.'/../vendor/autoload.php';
         $consoleHandler->setFormatter($formatter = new LineFormatter("[%datetime%] %message%\n"));
         $bufferer = new Bufferer(
         		$logger->pushHandler($consoleHandler),
-				new ResourceInputStream(STDIN),
+				new ResourceInputStream($stdin),
 				new ResourceOutputStream(tmpfile())
 		);
         $bufferHandler = \Amp\asyncCoroutine($bufferer);
