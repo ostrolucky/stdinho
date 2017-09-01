@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\ResourceOutputStream;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -23,11 +25,16 @@ require_once __DIR__.'/../vendor/autoload.php';
 		$logger = new Logger('stdin-fileserver');
         $consoleHandler = new StreamHandler(STDERR);
         $consoleHandler->setFormatter($formatter = new LineFormatter("[%datetime%] %message%\n"));
-		$stdinPersister = new Bufferer($logger->pushHandler($consoleHandler), tmpfile());
-        $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $stdinPersister));
+        $bufferer = new Bufferer(
+        		$logger->pushHandler($consoleHandler),
+				new ResourceInputStream(STDIN),
+				new ResourceOutputStream(tmpfile())
+		);
+        $bufferHandler = \Amp\asyncCoroutine($bufferer);
+        $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $bufferer));
 
-        Amp\Loop::onReadable($stdin, $stdinPersister);
-        Amp\Loop::run(function() use ($clientHandler, $output) {
+        Amp\Loop::run(function() use ($clientHandler, $output, $bufferHandler) {
+        	$bufferHandler();
             $server = Amp\socket\listen('127.0.1:1337');
             $output->writeln('Open your browser and visit http://' . $server->getAddress());
             while ($socket = yield $server->accept()) {

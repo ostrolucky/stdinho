@@ -24,10 +24,9 @@ class Responder
         $this->logger->info("Accepted connection from $remoteAddress");
 
         /** @var Handle $handle */
-        // FIXME Path will be null if buffer didn't manage to write enough data yet. Use Promise?
         $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'r');
 
-        yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", $this->bufferer->getMimeType()));
+        yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", yield $this->bufferer->getMimeType()));
 
         try {
             while ($chunk = yield $handle->read() or $this->bufferer->isBuffering()) {

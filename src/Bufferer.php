@@ -2,50 +2,47 @@
 
 namespace Ostrolucky\StdinFileServer;
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\Loop;
+use Amp\ByteStream\InputStream;
+use Amp\ByteStream\ResourceOutputStream;
+use Amp\Promise;
 use Psr\Log\LoggerInterface;
 
 class Bufferer
 {
     private $logger;
-    private $handle;
+    private $inputStream;
+    private $outputStream;
 
     private $mimeType;
     private $filePath;
     private $buffering = true;
 
-    public function __construct(LoggerInterface $logger, $resource)
+    public function __construct(LoggerInterface $logger, InputStream $inputStream, ResourceOutputStream $outputStream)
     {
         $this->logger = $logger;
-        $this->handle = $resource;
+        $this->inputStream = $inputStream;
+        $this->outputStream = $outputStream;
+        $this->mimeType = new \Amp\Deferred;
+        $this->filePath = stream_get_meta_data($this->outputStream->getResource())['uri'];
     }
 
-    public function __invoke($watcherId, $stream)
+    public function __invoke()
     {
-        static $run = false;
+        $this->logger->debug("Saving stdin to $this->filePath");
 
-        if (feof($stream)) {
-            $this->logger->debug('Stdin transfer done');
-            $this->buffering = false;
-            Loop::cancel($watcherId);
-            return;
+        $firstRun = true;
+        while (null !== $chunk = yield $this->inputStream->read()) {
+            yield $this->outputStream->write($chunk);
+
+            if ($firstRun) {
+                $firstRun = false;
+                $this->mimeType->resolve($mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk));
+                $this->logger->debug("Stdin MIME type detected: $mimeType");
+            }
         }
 
-        if (!$run) {
-            stream_set_blocking($stream, false);
-        }
-
-        fputs($this->handle, $data = fread($stream, ResourceInputStream::DEFAULT_CHUNK_SIZE));
-
-
-        if (!$run) {
-            $run = true;
-            $this->filePath = stream_get_meta_data($this->handle)['uri'];
-            $this->mimeType = (new \finfo(FILEINFO_MIME))->buffer($data);
-            $this->logger->debug("Saving stdin to $this->filePath");
-            $this->logger->debug("Stdin MIME type detected: $this->mimeType");
-        }
+        $this->buffering = false;
+        $this->logger->debug('Stdin transfer done');
     }
 
     public function getFilePath(): string
@@ -53,9 +50,9 @@ class Bufferer
         return $this->filePath;
     }
 
-    public function getMimeType(): string
+    public function getMimeType(): Promise
     {
-        return $this->mimeType;
+        return $this->mimeType->promise();
     }
 
     public function isBuffering(): bool
