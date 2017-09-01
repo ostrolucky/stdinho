@@ -36,8 +36,9 @@ class Bufferer
 
             if ($firstRun) {
                 $firstRun = false;
-                $this->mimeType->resolve($mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk));
+                $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
                 $this->logger->debug("Stdin MIME type detected: $mimeType");
+                $this->mimeType->resolve($mimeType);
             }
         }
 
