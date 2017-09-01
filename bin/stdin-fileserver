@@ -4,8 +4,8 @@
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Ostrolucky\StdinFileServer\Bufferer;
 use Ostrolucky\StdinFileServer\Responder;
-use Ostrolucky\StdinFileServer\StdinPersister;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -23,8 +23,8 @@ require_once __DIR__.'/../vendor/autoload.php';
 		$logger = new Logger('stdin-fileserver');
         $consoleHandler = new StreamHandler(STDERR);
         $consoleHandler->setFormatter($formatter = new LineFormatter("[%datetime%] %message%\n"));
-		$stdinPersister = new StdinPersister($logger->pushHandler($consoleHandler));
-        $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $stdinPersister->getHandleFilePath()));
+		$stdinPersister = new Bufferer($logger->pushHandler($consoleHandler), tmpfile());
+        $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $stdinPersister));
 
         Amp\Loop::onReadable($stdin, $stdinPersister);
         Amp\Loop::run(function() use ($clientHandler, $output) {

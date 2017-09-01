@@ -10,13 +10,12 @@ use Psr\Log\LoggerInterface;
 class Responder
 {
     private $logger;
-    private $outputFilePath;
-    private $contentType;
+    private $stdinPersister;
 
-    public function __construct(LoggerInterface $logger, $outputFilePath)
+    public function __construct(LoggerInterface $logger, Bufferer $stdinPersister)
     {
         $this->logger = $logger;
-        $this->outputFilePath = $outputFilePath;
+        $this->stdinPersister = $stdinPersister;
     }
 
     public function __invoke(Socket $socket)
@@ -24,15 +23,10 @@ class Responder
         $remoteAddress = $socket->getRemoteAddress();
         $this->logger->info("Accepted connection from $remoteAddress");
 
-        if ($this->contentType === null) {
-            $this->contentType = mime_content_type($this->outputFilePath);
-            $this->logger->debug("Content-type detected: $this->contentType");
-        }
-
         /** @var Handle $handle */
-        $handle = yield \Amp\File\open($this->outputFilePath, 'r');
+        $handle = yield \Amp\File\open($this->stdinPersister->getFilePath(), 'r');
 
-        yield $socket->write("HTTP/1.1 200 OK\nContent-Type: $this->contentType\n\n");
+        yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", $this->stdinPersister->getMimeType()));
 
         try {
             while (null !== $chunk = yield $handle->read()) {
