@@ -14,8 +14,8 @@
         "psr-4": { "Ostrolucky\\StdinFileServer\\": "src" }
     },
     "require": {
-        "symfony/console": "^3.3",
-        "amphp/socket": "^0.10.2",
-        "monolog/monolog": "^1.23"
+        "symfony/console": "4.1.x-dev",
+        "amphp/socket": "^0.10",
+        "psr/log": "^1.0"
     }
 }

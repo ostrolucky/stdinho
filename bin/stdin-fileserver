@@ -3,45 +3,51 @@
 
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
-use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
 use Ostrolucky\StdinFileServer\Bufferer;
+use Ostrolucky\StdinFileServer\ConsoleLogger;
 use Ostrolucky\StdinFileServer\Responder;
+use Symfony\Component\Console\Helper\DescriptorHelper;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
 (new \Symfony\Component\Console\Application())
 	->register('stdin-fileserver')
 	->setDescription('Serve stdin over HTTP')
-	->setCode(function(InputInterface $input, OutputInterface $output) {
-		// TODO: Show help instead of throwing exception
+	->setCode(function(InputInterface $input, ConsoleOutput $output) {
 		if (ftell($stdin = STDIN) === false) {
-			throw new \RuntimeException('Please pipe stdin into stdin-fileserver');
+            (new DescriptorHelper())->describe($output, $this);
+            (new SymfonyStyle($input, $output))->error('Please pipe stdin into stdin-fileserver');
+
+            return 1;
 		}
 
-		$logger = new Logger('stdin-fileserver');
-        $consoleHandler = new StreamHandler(STDERR);
-        $consoleHandler->setFormatter($formatter = new LineFormatter("[%datetime%] %message%\n"));
+        $output = new \Ostrolucky\StdinFileServer\ConsoleOutput($output->getVerbosity());
+
         $bufferer = new Bufferer(
-        		$logger->pushHandler($consoleHandler),
-				new ResourceInputStream($stdin),
-				new ResourceOutputStream(tmpfile())
+            $logger = new ConsoleLogger($firstSection = $output->section()),
+			new ResourceInputStream($stdin),
+			new ResourceOutputStream(tmpfile()),
+			$output->section()
 		);
         $bufferHandler = \Amp\asyncCoroutine($bufferer);
-        $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $bufferer));
-
-        Amp\Loop::run(function() use ($clientHandler, $output, $bufferHandler) {
+        $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $bufferer, $output));
+	
+        Amp\Loop::run(function() use ($clientHandler, $logger, $firstSection, $bufferHandler) {
         	$bufferHandler();
-            $server = Amp\socket\listen('127.0.1:1337');
-            $output->writeln('Open your browser and visit http://' . $server->getAddress());
+            $server = Amp\socket\listen('127.0.0.1:1337');
+            $logger->debug('Listening on port 1337');
+            $firstSection->writeln('<info>Open your browser and visit http://' . $server->getAddress().'</info>');
             while ($socket = yield $server->accept()) {
             	$clientHandler($socket);
 			}
         });
+
+        return 0;
 	})
 	->getApplication()
 	->setDefaultCommand('stdin-fileserver', true)
-	->run();
+	->run()
+;

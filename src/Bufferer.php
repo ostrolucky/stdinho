@@ -12,38 +12,49 @@ class Bufferer
     private $logger;
     private $inputStream;
     private $outputStream;
+    private $output;
 
     private $mimeType;
     private $filePath;
     private $buffering = true;
+    private $progressBar = 0;
 
-    public function __construct(LoggerInterface $logger, InputStream $inputStream, ResourceOutputStream $outputStream)
-    {
+    public function __construct(
+        LoggerInterface $logger,
+        InputStream $inputStream,
+        ResourceOutputStream $outputStream,
+        ConsoleSectionOutput $output
+    ) {
         $this->logger = $logger;
         $this->inputStream = $inputStream;
         $this->outputStream = $outputStream;
+        $this->output = $output;
         $this->mimeType = new \Amp\Deferred;
         $this->filePath = stream_get_meta_data($this->outputStream->getResource())['uri'];
+        $this->progressBar = new ProgressBar($this->output, 0, 'buffer');
     }
 
     public function __invoke()
     {
         $this->logger->debug("Saving stdin to $this->filePath");
 
-        $firstRun = true;
+        $bytesDownloaded = 0;
         while (null !== $chunk = yield $this->inputStream->read()) {
             yield $this->outputStream->write($chunk);
 
-            if ($firstRun) {
-                $firstRun = false;
+            if ($bytesDownloaded === 0) {
                 $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
                 $this->logger->debug("Stdin MIME type detected: $mimeType");
                 $this->mimeType->resolve($mimeType);
+                $this->output->writeln('');
             }
+
+            $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
         }
 
         $this->buffering = false;
-        $this->logger->debug('Stdin transfer done');
+        $this->progressBar->finish();
+        $this->logger->debug("Stdin transfer done, $bytesDownloaded bytes downloaded");
     }
 
     public function getFilePath(): string
@@ -59,5 +70,10 @@ class Bufferer
     public function isBuffering(): bool
     {
         return $this->buffering;
+    }
+
+    public function getProgressBar(): ProgressBar
+    {
+        return $this->progressBar;
     }
 }

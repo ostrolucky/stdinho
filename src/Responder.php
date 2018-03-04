@@ -11,39 +11,46 @@ class Responder
 {
     private $logger;
     private $bufferer;
+    private $consoleOutput;
 
-    public function __construct(LoggerInterface $logger, Bufferer $bufferer)
+    public function __construct(LoggerInterface $logger, Bufferer $bufferer, ConsoleOutput $consoleOutput)
     {
         $this->logger = $logger;
         $this->bufferer = $bufferer;
+        $this->consoleOutput = $consoleOutput;
     }
 
     public function __invoke(Socket $socket)
     {
         $remoteAddress = $socket->getRemoteAddress();
-        $this->logger->info("Accepted connection from $remoteAddress");
+        $this->logger->debug("Accepted connection from $remoteAddress");
 
         /** @var Handle $handle */
         $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'r');
 
         yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", yield $this->bufferer->getMimeType()));
 
+        $buffererProgressBar = $this->bufferer->getProgressBar();
+        $progressBar = new ProgressBar($this->consoleOutput->section(), $buffererProgressBar->step, 'portal', $remoteAddress);
+
         try {
-            while ($chunk = yield $handle->read() or $this->bufferer->isBuffering()) {
+            while (($chunk = yield $handle->read()) || $this->bufferer->isBuffering()) {
                 // we reached end of the buffer, but it's still buffering
                 if ($chunk === null) {
                     continue;
                 }
-//                echo strlen($chunk).PHP_EOL;
+
                 yield $socket->write($chunk);
+                $progressBar->max = $buffererProgressBar->step;
+                $progressBar->advance(strlen($chunk));
             };
-            $this->logger->info("$remoteAddress finished download");
+            $progressBar->finish();
+            $this->logger->debug("$remoteAddress finished download");
         } catch (StreamException $exception) {
-            $this->logger->info("$remoteAddress aborted download");
+            $this->logger->debug("$remoteAddress aborted download");
         }
 
         $handle->end();
         $socket->end();
-
     }
 }
