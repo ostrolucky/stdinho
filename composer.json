@@ -14,7 +14,7 @@
         "psr-4": { "Ostrolucky\\Stdinho\\": "src" }
     },
     "require": {
-        "symfony/console": "4.1.x-dev",
+        "symfony/console": "^3.2|^4.0",
         "amphp/socket": "^0.10",
         "psr/log": "^1.0"
     }
