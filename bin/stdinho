@@ -3,6 +3,7 @@
 
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
+use Jean85\PrettyVersions;
 use Ostrolucky\Stdinho\Bufferer;
 use Ostrolucky\Stdinho\ConsoleLogger;
 use Ostrolucky\Stdinho\Responder;
@@ -14,7 +15,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 require_once __DIR__.'/../vendor/autoload.php';
 define('APP_NAME', basename(__FILE__));
 
-(new \Symfony\Component\Console\Application(APP_NAME, 0.1))
+(new \Symfony\Component\Console\Application(APP_NAME, PrettyVersions::getVersion('ostrolucky/'.APP_NAME)))
 	->register(APP_NAME)
 	->setDescription('Create HTTP portal for your standard input')
 	->setCode(function(InputInterface $input, ConsoleOutput $output) {
