@@ -1,5 +1,5 @@
 {
-    "name": "ostrolucky/stdin-file-server",
+    "name": "ostrolucky/stdinho",
     "description": "Opens HTTP portal to your stdin stream",
     "type": "project",
     "license": "MIT",
@@ -9,9 +9,9 @@
             "email": "gabriel.ostrolucky@gmail.com"
         }
     ],
-    "bin": ["bin/stdin-fileserver"],
+    "bin": ["bin/stdinho"],
     "autoload": {
-        "psr-4": { "Ostrolucky\\StdinFileServer\\": "src" }
+        "psr-4": { "Ostrolucky\\Stdinho\\": "src" }
     },
     "require": {
         "symfony/console": "4.1.x-dev",

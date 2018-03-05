@@ -1,6 +1,6 @@
 <?php
 
-namespace Ostrolucky\StdinFileServer;
+namespace Ostrolucky\Stdinho;
 
 class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 {

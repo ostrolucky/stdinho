@@ -1,6 +1,6 @@
 <?php
 
-namespace Ostrolucky\StdinFileServer;
+namespace Ostrolucky\Stdinho;
 
 use Psr\Log\AbstractLogger;
 use Symfony\Component\Console\Output\OutputInterface;

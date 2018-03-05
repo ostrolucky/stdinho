@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Ostrolucky\StdinFileServer;
+namespace Ostrolucky\Stdinho;
 
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Helper\Helper;

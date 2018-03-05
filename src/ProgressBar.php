@@ -1,6 +1,6 @@
 <?php
 
-namespace Ostrolucky\StdinFileServer;
+namespace Ostrolucky\Stdinho;
 
 use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Terminal;

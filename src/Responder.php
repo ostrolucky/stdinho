@@ -1,6 +1,6 @@
 <?php
 
-namespace Ostrolucky\StdinFileServer;
+namespace Ostrolucky\Stdinho;
 
 use Amp\ByteStream\StreamException;
 use Amp\File\Handle;

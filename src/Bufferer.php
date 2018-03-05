@@ -1,6 +1,6 @@
 <?php
 
-namespace Ostrolucky\StdinFileServer;
+namespace Ostrolucky\Stdinho;
 
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\ResourceOutputStream;
