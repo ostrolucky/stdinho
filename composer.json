@@ -14,8 +14,12 @@
         "psr-4": { "Ostrolucky\\Stdinho\\": "src" }
     },
     "require": {
+        "php": ">=7.0",
         "symfony/console": "^3.2|^4.0",
-        "amphp/socket": "^0.10",
+        "amphp/amp": "^2.0",
+        "amphp/byte-stream": "^1.2",
+        "amphp/socket": "~0.10",
+        "amphp/file": "~0.2",
         "psr/log": "^1.0",
         "jean85/pretty-package-versions": "^1.1"
     }
