@@ -1,6 +1,6 @@
 {
     "name": "ostrolucky/stdinho",
-    "description": "Opens HTTP portal to your stdin stream",
+    "description": "Open HTTP portal to your standard input stream",
     "type": "project",
     "license": "MIT",
     "authors": [

@@ -17,7 +17,7 @@ define('APP_NAME', basename(__FILE__));
 
 (new \Symfony\Component\Console\Application(APP_NAME, PrettyVersions::getVersion('ostrolucky/'.APP_NAME)))
 	->register(APP_NAME)
-	->setDescription('Create HTTP portal for your standard input')
+	->setDescription('Open HTTP portal to your standard input stream')
 	->setCode(function(InputInterface $input, ConsoleOutput $output) {
 		if (ftell($stdin = STDIN) === false) {
             (new DescriptorHelper())->describe($output, $this);
