@@ -2,7 +2,7 @@
     "name": "ostrolucky/stdinho",
     "description": "Open HTTP portal to your standard input stream",
     "type": "project",
-    "license": "MIT",
+    "license": "GPL-3.0",
     "authors": [
         {
             "name": "Gabriel Ostrolucký",
