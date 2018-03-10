@@ -10,11 +10,11 @@ Unless it's just a matter of sending a link, you fetch it for them.
 This involves **waiting** until your PC finishes downloading/processing.
 Once you have fetched it, you send it to person who needs it. Here's it visualized:
 
-![ineffective queue](https://user-images.githubusercontent.com/496233/37237654-bef34336-2416-11e8-9530-24b78fc95c62.gif)
+![ineffective queue](https://user-images.githubusercontent.com/496233/37244176-5880cb04-2485-11e8-8d09-69798ad5fcc8.gif)
 
 I was tired of waiting.
 
-![stream as you go](https://user-images.githubusercontent.com/496233/37237657-d7a6d65e-2416-11e8-916a-c1222e7e6145.gif)
+![stream as you go](https://user-images.githubusercontent.com/496233/37244184-6cce0cca-2485-11e8-9b95-3c92ee0b0012.gif)
 
 
 This tool skips the waiting part, by joining fetching/processing with sending. 
