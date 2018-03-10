@@ -54,7 +54,6 @@ $ stdinho --help
 
 Will add:
 
-* Option to specify port and address
 * Option to save the stream into file
 
 ## Example usage/Showcase

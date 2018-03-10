@@ -8,6 +8,7 @@ use Ostrolucky\Stdinho\Bufferer;
 use Ostrolucky\Stdinho\ConsoleLogger;
 use Ostrolucky\Stdinho\Responder;
 use Symfony\Component\Console\Helper\DescriptorHelper;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -17,6 +18,7 @@ define('APP_NAME', basename(__FILE__));
 
 (new \Symfony\Component\Console\Application(APP_NAME, PrettyVersions::getVersion('ostrolucky/'.APP_NAME)))
 	->register(APP_NAME)
+	->addArgument('addressPort', InputArgument::OPTIONAL, 'The address:port to listen to', '0.0.0.0:*')
 	->setDescription('Open HTTP portal to your standard input stream')
 	->setCode(function(InputInterface $input, ConsoleOutput $output) {
 		if (ftell($stdin = STDIN) === false) {
@@ -36,12 +38,12 @@ define('APP_NAME', basename(__FILE__));
 		);
         $bufferHandler = \Amp\asyncCoroutine($bufferer);
         $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $bufferer, $output));
-	
-        Amp\Loop::run(function() use ($clientHandler, $logger, $firstSection, $bufferHandler) {
+        $addressPort = $input->getArgument('addressPort');
+
+        Amp\Loop::run(function() use ($addressPort, $clientHandler, $logger, $firstSection, $bufferHandler) {
         	$bufferHandler();
-            $server = Amp\socket\listen('127.0.0.1:1337');
-            $logger->debug('Listening on port 1337');
-            $firstSection->writeln('<info>Open your browser and visit http://' . $server->getAddress() . '</info>');
+            $server = Amp\socket\listen($addressPort);
+            $firstSection->writeln('<info>Connection opened at http://' . $server->getAddress() . '</info>');
             while ($socket = yield $server->accept()) {
             	$clientHandler($socket);
 			}
