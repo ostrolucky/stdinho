@@ -13,7 +13,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-require_once __DIR__.'/../vendor/autoload.php';
+$autoloadPath = '/../vendor/autoload.php';
+require_once file_exists(__DIR__.$autoloadPath) ? __DIR__.$autoloadPath : __DIR__.'/../../..'.$autoloadPath;
+
 define('APP_NAME', basename(__FILE__));
 
 (new \Symfony\Component\Console\Application(APP_NAME, PrettyVersions::getVersion('ostrolucky/'.APP_NAME)))
