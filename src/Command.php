@@ -32,18 +32,17 @@ class Command extends \Symfony\Component\Console\Command\Command
     {
         $filePath = $input->getOption('file');
         $hasStdin = ftell($stdin = STDIN) !== false;
-        $inputResource = $hasStdin ? STDIN : @fopen($filePath, 'r');
 
         $errorHandler = function($message) use ($input, $output) {
             (new DescriptorHelper())->describe($output, $this);
             (new SymfonyStyle($input, $output))->error($message);
         };
 
-        if (!$inputResource) {
+        if (!$hasStdin && !$filePath) {
             $errorHandler('Please pipe stdin into '.APP_NAME.', or provide file path via -file option');
 
             return 1;
-        } elseif ($filePath && !$hasStdin && !file_exists($filePath)) {
+        } elseif (!$hasStdin && $filePath && !file_exists($filePath)) {
             $errorHandler("Path $filePath does not exist!");
 
             return 1;
@@ -54,7 +53,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         if ($hasStdin) {
             $bufferer = new PipeBufferer(
                 $logger,
-                new ResourceInputStream($inputResource),
+                new ResourceInputStream(STDIN),
                 new ResourceOutputStream($filePath ? fopen($filePath, 'w') : tmpfile()),
                 $output->section()
             );
