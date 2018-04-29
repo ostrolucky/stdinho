@@ -10,6 +10,7 @@ use Symfony\Component\Console\Helper\DescriptorHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -24,6 +25,9 @@ class Command extends \Symfony\Component\Console\Command\Command
         ;
     }
 
+    /**
+     * @param ConsoleOutput $output
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $filePath = $input->getOption('file');
@@ -45,7 +49,6 @@ class Command extends \Symfony\Component\Console\Command\Command
             return 1;
         }
 
-        $output = new \Ostrolucky\Stdinho\ConsoleOutput($output->getVerbosity());
         $logger = new ConsoleLogger($firstSection = $output->section());
 
         if ($hasStdin) {

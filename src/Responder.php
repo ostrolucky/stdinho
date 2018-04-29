@@ -7,6 +7,7 @@ use Amp\File\Handle;
 use Amp\Socket\Socket;
 use Ostrolucky\Stdinho\Bufferer\BuffererInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class Responder
 {

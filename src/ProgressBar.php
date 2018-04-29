@@ -3,6 +3,7 @@
 namespace Ostrolucky\Stdinho;
 
 use Symfony\Component\Console\Helper\Helper;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Terminal;
 
 class ProgressBar

@@ -5,9 +5,9 @@ namespace Ostrolucky\Stdinho\Bufferer;
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Promise;
-use Ostrolucky\Stdinho\ConsoleSectionOutput;
 use Ostrolucky\Stdinho\ProgressBar;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
 
 class PipeBufferer implements BuffererInterface
 {
