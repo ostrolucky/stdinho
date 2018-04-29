@@ -22,7 +22,7 @@ You can pipe any standard stream into this tool and it immediately makes
 it available via HTTP, as it goes in. You send a link to people who need the stuff. 
 People click the link and immediately start downloading.
 
-You guys like screenshots? Here is it in action:
+Here is it in action:
 
 
 ![stdinho](https://user-images.githubusercontent.com/496233/37237663-e240866e-2416-11e8-9d03-386ae3790d1c.png)
