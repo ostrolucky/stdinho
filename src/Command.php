@@ -39,7 +39,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         };
 
         if (!$hasStdin && !$filePath) {
-            $errorHandler('Please pipe stdin into '.APP_NAME.', or provide file path via -file option');
+            $errorHandler('Please pipe stdin into '.APP_NAME.', or provide file path via --file option');
 
             return 1;
         } elseif (!$hasStdin && $filePath && !file_exists($filePath)) {
