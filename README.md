@@ -46,15 +46,15 @@ composer global require ostrolucky/stdinho
 
 ## Configuration
 
-Not much configuration so far. 
-You can watch all available options by running
+Just supply stdinho or provide file via `--file` option to stdinho and that's all. 
+There is option to specify IP/Port on which stdinho should listen at as well.
+
+`--file` acts as an [tee](https://en.wikipedia.org/wiki/Tee_(command)) if both stdin and --file is provided 
+
+You can watch all available options by running. 
 ```bash
 $ stdinho --help
 ``` 
-
-Will add:
-
-* Option to save the stream into file
 
 ## Example usage/Showcase
 Simple
@@ -69,8 +69,8 @@ $ tail -f project/var/log/*.log|stdinho
 # Your colleague: View them
 $ curl 127.0.0.1:1337 
 
-# You: Zip a folder and share it
-$ zip -r - project|stdinho
+# You: Zip a folder, share it and save it locally as well
+$ zip -r - project|stdinho -f project.zip
 # Somebody else: Save a zip
 $ curl 127.0.0.1:1337 -o project.zip
 ```

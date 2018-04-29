@@ -1,13 +1,15 @@
 <?php
 
-namespace Ostrolucky\Stdinho;
+namespace Ostrolucky\Stdinho\Bufferer;
 
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Promise;
+use Ostrolucky\Stdinho\ConsoleSectionOutput;
+use Ostrolucky\Stdinho\ProgressBar;
 use Psr\Log\LoggerInterface;
 
-class Bufferer
+class PipeBufferer implements BuffererInterface
 {
     private $logger;
     private $inputStream;
@@ -34,7 +36,7 @@ class Bufferer
         $this->progressBar = new ProgressBar($this->output, 0, 'buffer');
     }
 
-    public function __invoke()
+    public function __invoke(): \Generator
     {
         $this->logger->debug("Saving stdin to $this->filePath");
 
@@ -72,8 +74,8 @@ class Bufferer
         return $this->buffering;
     }
 
-    public function getProgressBar(): ProgressBar
+    public function getCurrentProgress(): int
     {
-        return $this->progressBar;
+        return $this->progressBar->step;
     }
 }

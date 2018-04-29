@@ -1,59 +1,18 @@
 #!/usr/bin/env php
 <?php
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
 use Jean85\PrettyVersions;
-use Ostrolucky\Stdinho\Bufferer;
-use Ostrolucky\Stdinho\ConsoleLogger;
-use Ostrolucky\Stdinho\Responder;
-use Symfony\Component\Console\Helper\DescriptorHelper;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Style\SymfonyStyle;
+use Ostrolucky\Stdinho\Command;
+use Symfony\Component\Console\Application;
 
 $autoloadPath = '/../vendor/autoload.php';
 require_once file_exists(__DIR__.$autoloadPath) ? __DIR__.$autoloadPath : __DIR__.'/../../..'.$autoloadPath;
 
 define('APP_NAME', basename(__FILE__));
 
-(new \Symfony\Component\Console\Application(APP_NAME, PrettyVersions::getVersion('ostrolucky/'.APP_NAME)))
-	->register(APP_NAME)
-	->addArgument('addressPort', InputArgument::OPTIONAL, 'The address:port to listen to', '0.0.0.0:*')
-	->setDescription('Open HTTP portal to your standard input stream')
-	->setCode(function(InputInterface $input, ConsoleOutput $output) {
-		if (ftell($stdin = STDIN) === false) {
-            (new DescriptorHelper())->describe($output, $this);
-            (new SymfonyStyle($input, $output))->error('Please pipe stdin into '.APP_NAME);
-
-            return 1;
-		}
-
-        $output = new \Ostrolucky\Stdinho\ConsoleOutput($output->getVerbosity());
-
-        $bufferer = new Bufferer(
-            $logger = new ConsoleLogger($firstSection = $output->section()),
-			new ResourceInputStream($stdin),
-			new ResourceOutputStream(tmpfile()),
-			$output->section()
-		);
-        $bufferHandler = \Amp\asyncCoroutine($bufferer);
-        $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $bufferer, $output));
-        $addressPort = $input->getArgument('addressPort');
-
-        Amp\Loop::run(function() use ($addressPort, $clientHandler, $logger, $firstSection, $bufferHandler) {
-        	$bufferHandler();
-            $server = Amp\socket\listen($addressPort);
-            $firstSection->writeln('<info>Connection opened at http://' . $server->getAddress() . '</info>');
-            while ($socket = yield $server->accept()) {
-            	$clientHandler($socket);
-			}
-        });
-
-        return 0;
-	})
-	->getApplication()
-	->setDefaultCommand(APP_NAME, true)
-	->run()
+$application = new Application(APP_NAME, PrettyVersions::getVersion('ostrolucky/'.APP_NAME));
+$application->add($command = new Command(APP_NAME));
+$application
+    ->setDefaultCommand($command->getName(), true)
+    ->run()
 ;

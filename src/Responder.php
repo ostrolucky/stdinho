@@ -5,6 +5,7 @@ namespace Ostrolucky\Stdinho;
 use Amp\ByteStream\StreamException;
 use Amp\File\Handle;
 use Amp\Socket\Socket;
+use Ostrolucky\Stdinho\Bufferer\BuffererInterface;
 use Psr\Log\LoggerInterface;
 
 class Responder
@@ -13,7 +14,7 @@ class Responder
     private $bufferer;
     private $consoleOutput;
 
-    public function __construct(LoggerInterface $logger, Bufferer $bufferer, ConsoleOutput $consoleOutput)
+    public function __construct(LoggerInterface $logger, BuffererInterface $bufferer, ConsoleOutput $consoleOutput)
     {
         $this->logger = $logger;
         $this->bufferer = $bufferer;
@@ -30,8 +31,12 @@ class Responder
 
         yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", yield $this->bufferer->getMimeType()));
 
-        $buffererProgressBar = $this->bufferer->getProgressBar();
-        $progressBar = new ProgressBar($this->consoleOutput->section(), $buffererProgressBar->step, 'portal', $remoteAddress);
+        $progressBar = new ProgressBar(
+            $this->consoleOutput->section(),
+            $this->bufferer->getCurrentProgress(),
+            'portal',
+            $remoteAddress
+        );
 
         try {
             while (($chunk = yield $handle->read()) || $this->bufferer->isBuffering()) {
@@ -41,7 +46,8 @@ class Responder
                 }
 
                 yield $socket->write($chunk);
-                $progressBar->max = $buffererProgressBar->step;
+
+                $progressBar->max = $this->bufferer->getCurrentProgress();
                 $progressBar->advance(strlen($chunk));
             };
             $progressBar->finish();
