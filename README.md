@@ -46,7 +46,7 @@ composer global require ostrolucky/stdinho
 
 ## Configuration
 
-Just supply stdinho or provide file via `--file` option to stdinho and that's all. 
+Just supply stdin or provide file via `--file` option to stdinho and that's all. 
 There is option to specify IP/Port on which stdinho should listen at as well.
 
 `--file` acts as an [tee](https://en.wikipedia.org/wiki/Tee_(command)) if both stdin and --file is provided 
