@@ -31,7 +31,7 @@ class Command extends \Symfony\Component\Console\Command\Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $filePath = $input->getOption('file');
-        $hasStdin = ftell($stdin = STDIN) !== false;
+        $hasStdin = ftell($stdin = STDIN) !== false && !stream_isatty($stdin);
 
         $errorHandler = function($message) use ($input, $output) {
             (new DescriptorHelper())->describe($output, $this);

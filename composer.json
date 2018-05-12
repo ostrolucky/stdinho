@@ -1,7 +1,7 @@
 {
     "name": "ostrolucky/stdinho",
-    "description": "Open HTTP portal to your standard input stream",
     "type": "project",
+    "description": "Open HTTP portal to your standard input stream",
     "license": "GPL-3.0",
     "authors": [
         {
@@ -9,19 +9,27 @@
             "email": "gabriel.ostrolucky@gmail.com"
         }
     ],
-    "bin": ["bin/stdinho"],
-    "autoload": {
-        "psr-4": { "Ostrolucky\\Stdinho\\": "src" }
-    },
     "require": {
         "php": ">=7.1",
-        "symfony/console": "^4.1@beta",
+        "ext-fileinfo": "*",
         "amphp/amp": "^2.0",
         "amphp/byte-stream": "^1.2.5",
-        "amphp/socket": "~0.10",
         "amphp/file": "~0.2",
-        "psr/log": "^1.0",
+        "amphp/socket": "~0.10",
         "jean85/pretty-package-versions": "^1.1",
-        "ext-fileinfo": "*"
-    }
+        "psr/log": "^1.0",
+        "symfony/console": "^4.1@beta",
+        "symfony/polyfill-php72": "^1.7"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Ostrolucky\\Stdinho\\": "src"
+        }
+    },
+    "bin": [
+        "bin/stdinho"
+    ]
 }

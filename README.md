@@ -40,6 +40,7 @@ composer global require ostrolucky/stdinho
 * Stdin. Most universal input.
 * HTTP. Most universal network output.
 * Async = non-blocking. Yes, in PHP.
+* Cross-platform. Linux/MacOS/Windows.
 * Buffers to temp directory. Automatically gets rid of the stream on close.
 * Detects MIME type and attaches it to HTTP response automatically. Streaming video? Browser detects it and plays it immediately.
 * Shows detailed progress of stdin stream and progress of downloading by clients
