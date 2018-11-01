@@ -1,0 +1,1 @@
+../vendor/amphp/sync/travis/install-pthreads.sh

@@ -18,7 +18,7 @@
         "amphp/socket": "^0.10",
         "jean85/pretty-package-versions": "^1.1",
         "psr/log": "^1.0",
-        "symfony/console": "^4.1@beta",
+        "symfony/console": "2.0.7",
         "symfony/polyfill-php72": "^1.7"
     },
     "config": {
