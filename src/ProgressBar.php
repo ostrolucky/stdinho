@@ -78,7 +78,7 @@ class ProgressBar
         $this->step = $step;
         $this->percent = $this->max ? (float)$step / $this->max : 0;
 
-        if (microtime(true) - $this->lastWriteTime >= .1) {
+        if (microtime(true) - $this->lastWriteTime >= ($this->output->isDecorated() ? .1 : 1)) {
             $this->overwrite($this->buildLine());
         }
     }
@@ -106,7 +106,7 @@ class ProgressBar
 
         $this->firstRun = false;
         $this->lastWriteTime = microtime(true);
-        $this->output->write($message);
+        $this->output->write($message, !$this->output->isDecorated());
     }
 
     private function buildLine(): string
