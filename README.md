@@ -8,13 +8,13 @@ So, what do you do?
 
 Unless it's just a matter of sending a link, you fetch it for them. 
 This involves **waiting** until your PC finishes downloading/processing.
-Once you have fetched it, you send it to person who needs it. Here's it visualized:
+Once you have fetched it, you send it to person who needs it. 
+Also, sending it sometimes means to first upload it somewhere, so other person can download it from there.
+This uploading involves again unnecessary **waiting**. I was tired of these waitings...
 
-![ineffective queue](https://user-images.githubusercontent.com/496233/37245357-ff595ef8-2496-11e8-8c9a-0f10f9bd456f.gif)
+Here's this pain and its removal visualized:
 
-I was tired of waiting.
-
-![stream as you go](https://user-images.githubusercontent.com/496233/37245353-ed8cefd2-2496-11e8-801a-0654f15c5706.gif)
+![stdinho animation](https://user-images.githubusercontent.com/496233/47866950-750db900-de00-11e8-8631-d25d723128f5.gif)
 
 
 This tool skips the waiting part, by joining fetching/processing with sending. 
@@ -57,31 +57,44 @@ You can watch all available options by running.
 $ stdinho --help
 ``` 
 
-## Example usage/Showcase
-Simple
+## Example use cases
 ```bash
-# You: Share a movie on your disk
-$ stdinho < /file/to/a/movie.mp4
-# Your friend: Watch it, with no full download required
+## Use case 1: Video streaming
+# Server
+$ stdinho 0.0.0.0:1337 < /file/to/a/movie.mp4
+# Client
 $ firefox http://127.0.0.1:1337
 
-# You: Share application logs in realtime
-$ tail -f project/var/log/*.log|stdinho
-# Your colleague: View them
+## Use case 2: Share application logs in realtime 
+# Server
+$ tail -f project/var/log/*.log|stdinho 0.0.0.0:1337
+# Client
 $ curl 127.0.0.1:1337 
 
-# You: Zip a folder, share it and save it locally as well
-$ zip -r - project|stdinho -f project.zip
-# Somebody else: Save a zip
-$ curl 127.0.0.1:1337 -o project.zip
-```
+## Use case 3: Stream a folder, including compressing
+# Server
+$ zip -r - project|stdinho 0.0.0.0:1337 -f project.zip
+# Client
+$ curl 127.0.0.1:1337 -o project.zip # Saves it to project.zip
 
-Advanced
-```bash
-# You: Connect via SSH to a server, inside of it connect to MySQL server, retrieve database dump, gzip it, retrieve it
-$ ssh admin@example.com "mysqldump -u root -ptoor database|gzip -c"|stdinho
-# Your colleague: Retrieve the dump, extract and import directly to local dev database
-$ curl 127.0.0.1:1337|gunzip|mysql -u root -ptoor database
+## Use case 4: Dump remote database and stream it to different database on the fly via middle man
+# Server
+$ ssh admin@example.com "mysqldump -u root -ptoor database|gzip -c"|stdinho 0.0.0.0:1337 -f "$(date).sql.gz" # also saves the backup locally
+# Client
+$ curl 127.0.0.1:1337|gunzip|mysql -u root -ptoor database # Import it directly to local DB
+
+## Use case 5: 
+#   There is bad connectivity between A (public server) and B (user connected to network via special VPN), 
+#   but good connectivity between A and C (on same local network as A, but not public). 
+#   However, B and C are behind NAT in separate networks, so there is no direct connection between them.
+#   Here D is introduced, which is public server having good connection to both C and B, but no connection to A. 
+#   In final, download stream goes like this: A -> C -> D -> B which bypasses connection problem between A and B and NAT issue at the same time
+#   This problem is basically animation shown in introduction of this README.
+# C: 
+$ curl http://A.com/big_file.tar.gz|ssh admin@D.com 'stdinho 0.0.0.0:1337' 
+# B:
+$ curl D:1337
+
 ```
 
 
