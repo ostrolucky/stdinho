@@ -73,7 +73,7 @@ $ curl 127.0.0.1:1337
 
 ## Use case 3: Stream a folder, including compressing
 # Server
-$ zip -r - project|stdinho 0.0.0.0:1337 -f project.zip
+$ zip -qr - project|stdinho 0.0.0.0:1337 -f project.zip
 # Client
 $ curl 127.0.0.1:1337 -o project.zip # Saves it to project.zip
 
