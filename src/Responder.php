@@ -25,7 +25,7 @@ class Responder
     public function __invoke(Socket $socket)
     {
         $remoteAddress = $socket->getRemoteAddress();
-        $this->logger->debug("Accepted connection from $remoteAddress");
+        $this->logger->debug("Accepted connection from $remoteAddress:\n" . trim(yield $socket->read()));
 
         /** @var Handle $handle */
         $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'r');
