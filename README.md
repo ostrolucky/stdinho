@@ -90,10 +90,11 @@ $ curl 127.0.0.1:1337|gunzip|mysql -u root -ptoor database # Import it directly 
 #   Here D is introduced, which is public server having good connection to both C and B, but no connection to A. 
 #   In final, download stream goes like this: A -> C -> D -> B which bypasses connection problem between A and B and NAT issue at the same time
 #   This problem is basically animation shown in introduction of this README.
-# C: 
-$ curl http://A.com/big_file.tar.gz|ssh admin@D.com 'stdinho 0.0.0.0:1337' 
+# C:
+$ ssh -NR \*:1337:localhost:1337 D #Reverse tunnel. Note: GatewayPorts cannot be set to "no" in D's sshd_config
+$ curl http://A.com/big_file.tar.gz|stdinho 0.0.0.0:1337
 # B:
-$ curl D:1337
+$ curl D:1337 -o big_file.tar.gz
 
 ```
 
