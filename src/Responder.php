@@ -30,7 +30,12 @@ class Responder
         /** @var Handle $handle */
         $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'r');
 
-        yield $socket->write(sprintf("HTTP/1.1 200 OK\nContent-Type: %s\n\n", yield $this->bufferer->getMimeType()));
+        $header = "HTTP/1.1 200 OK\nContent-Type: " . yield $this->bufferer->getMimeType();
+        if (!$this->bufferer->isBuffering()) {
+            $header .= "\nContent-Length: {$this->bufferer->getCurrentProgress()}";
+        }
+
+        yield $socket->write("$header\n\n");
 
         $progressBar = new ProgressBar(
             $this->consoleOutput->section(),
