@@ -38,14 +38,16 @@ class Command extends \Symfony\Component\Console\Command\Command
             (new SymfonyStyle($input, $output))->error($message);
         };
 
-        if (!$hasStdin && !$filePath) {
-            $errorHandler('Please pipe stdin into '.APP_NAME.', or provide file path via --file option');
+        if (!$hasStdin) {
+            if (!$filePath) {
+                $errorHandler("Path $filePath does not exist!");
 
-            return 1;
-        } elseif ($filePath && !file_exists($filePath)) {
-            $errorHandler("Path $filePath does not exist!");
+                return 1;
+            } elseif (!file_exists($filePath)) {
+                $errorHandler('Please pipe stdin into ' . APP_NAME . ', or provide file path via --file option');
 
-            return 1;
+                return 1;
+            }
         }
 
         $logger = new ConsoleLogger($firstSection = $output->section());
