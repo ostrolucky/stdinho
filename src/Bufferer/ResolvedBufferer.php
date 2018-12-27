@@ -4,6 +4,7 @@
 namespace Ostrolucky\Stdinho\Bufferer;
 
 use Amp\Promise;
+use Amp\Success;
 
 class ResolvedBufferer implements BuffererInterface
 {
@@ -15,14 +16,10 @@ class ResolvedBufferer implements BuffererInterface
     {
         $this->filePath = $filePath;
         $this->filesize = filesize($filePath);
-        $this->mimeType = new \Amp\Deferred;
-        $this->mimeType->resolve((new \finfo(FILEINFO_MIME))->file($filePath));
+        $this->mimeType = (new \finfo(FILEINFO_MIME))->file($filePath);
     }
 
-    public function __invoke()
-    {
-        return $this->mimeType->promise();
-    }
+    public function __invoke() {}
 
     public function getFilePath(): string
     {
@@ -36,7 +33,7 @@ class ResolvedBufferer implements BuffererInterface
 
     public function getMimeType(): Promise
     {
-        return $this->mimeType->promise();
+        return new Success($this->mimeType);
     }
 
     public function getCurrentProgress(): int
