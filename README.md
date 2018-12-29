@@ -17,10 +17,9 @@ Here's this pain and its removal visualized:
 ![stdinho animation](https://user-images.githubusercontent.com/496233/47866950-750db900-de00-11e8-8631-d25d723128f5.gif)
 
 
-This tool skips the waiting part, by joining fetching/processing with sending. 
+This tool skips the waiting part, by merging fetching + processing + sending. 
 You can pipe any standard stream into this tool and it immediately makes
-it available via HTTP, as it goes in. You send a link to people who need the stuff. 
-People click the link and immediately start downloading.
+it available via HTTP, as it goes in.
 
 Here is it in action:
 
@@ -41,7 +40,7 @@ composer global require ostrolucky/stdinho
 * HTTP. Most universal network output.
 * Async = non-blocking. Yes, in PHP.
 * Cross-platform. Linux/MacOS/Windows.
-* Buffers to temp directory. Automatically gets rid of the stream on close.
+* Buffers to temp directory. Automatically gets rid of this bufer on close.
 * Detects MIME type and attaches it to HTTP response automatically. Streaming video? Browser detects it and plays it immediately.
 * Shows detailed progress of stdin stream and progress of downloading by clients
 
