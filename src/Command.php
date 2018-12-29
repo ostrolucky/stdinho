@@ -33,20 +33,18 @@ class Command extends \Symfony\Component\Console\Command\Command
         $filePath = $input->getOption('file');
         $hasStdin = ftell($stdin = STDIN) !== false && !stream_isatty($stdin);
 
-        $errorHandler = function($message) use ($input, $output) {
+        $errorHandler = function($message) use ($input, $output): int {
             (new DescriptorHelper())->describe($output, $this);
             (new SymfonyStyle($input, $output))->error($message);
+
+            return 1;
         };
 
         if (!$hasStdin) {
             if (!$filePath) {
-                $errorHandler("Path $filePath does not exist!");
-
-                return 1;
+                return $errorHandler("Path $filePath does not exist!");
             } elseif (!file_exists($filePath)) {
-                $errorHandler('Please pipe stdin into ' . APP_NAME . ', or provide file path via --file option');
-
-                return 1;
+                return $errorHandler('Please pipe stdin into ' . APP_NAME . ', or provide file path via --file option');
             }
         }
 
