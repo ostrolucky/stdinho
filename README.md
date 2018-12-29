@@ -102,3 +102,9 @@ $ curl D:1337 -o big_file.tar.gz
 ## Licensing
 
 GPLv3 license. Please see [License File](LICENSE.md) for more information.
+
+## See also
+
+
+- [inetd](https://debian-administration.org/article/371/A_web_server_in_a_shell_script) - Really old general purpose server, it's preinstalled on BSDs. I don't recommend to use it though if you don't have time to play around ;) You will have to write config for it, simple bash script and write HTTP headers by hand. And you will have no monitoring at hand.
+- [websocketd](https://github.com/joewalnes/websocketd) If you need to serve output of a program over websockets instead of HTTP
