@@ -40,9 +40,9 @@ composer global require ostrolucky/stdinho
 * HTTP. Most universal network output.
 * Async = non-blocking. Yes, in PHP.
 * Cross-platform. Linux/MacOS/Windows.
-* Buffers to temp directory. Automatically gets rid of this bufer on close.
-* Detects MIME type and attaches it to HTTP response automatically. Streaming video? Browser detects it and plays it immediately.
+* Buffers to temp before client is connected, so no time between is wasted
 * Shows detailed progress of stdin stream and progress of downloading by clients
+* Detects MIME type and attaches it to HTTP response automatically. Streaming video? Browser detects it and plays it immediately.
 
 ## Configuration
 
