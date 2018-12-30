@@ -30,6 +30,7 @@ class Command extends \Symfony\Component\Console\Command\Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $addressPort = $input->getArgument('addressPort');
         $filePath = $input->getOption('file');
         $hasStdin = ftell($stdin = STDIN) !== false && !stream_isatty($stdin);
 
@@ -50,26 +51,18 @@ class Command extends \Symfony\Component\Console\Command\Command
 
         $logger = new ConsoleLogger($firstSection = $output->section());
 
-        if ($hasStdin) {
-            $bufferer = new PipeBufferer(
-                $logger,
-                new ResourceInputStream($stdin),
-                new ResourceOutputStream($filePath ? fopen($filePath, 'w') : tmpfile()),
-                $output->section()
-            );
-        } else {
-            $bufferer = new ResolvedBufferer($filePath);
-        }
-
+        $bufferer = $hasStdin ?
+            new PipeBufferer($logger, $stdin, $filePath, $output->section()) :
+            new ResolvedBufferer($filePath)
+        ;
 
         $bufferHandler = \Amp\asyncCoroutine($bufferer);
         $clientHandler = \Amp\asyncCoroutine(new Responder($logger, $bufferer, $output));
-        $addressPort = $input->getArgument('addressPort');
 
         \Amp\Loop::run(function() use ($addressPort, $clientHandler, $logger, $firstSection, $bufferHandler) {
             $bufferHandler();
             $server = \Amp\socket\listen($addressPort);
-            $firstSection->writeln("<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>");
+            $firstSection->writeln("<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>\n");
             while ($socket = yield $server->accept()) {
                 $clientHandler($socket);
             }

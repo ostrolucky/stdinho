@@ -3,6 +3,7 @@
 namespace Ostrolucky\Stdinho\Bufferer;
 
 use Amp\ByteStream\InputStream;
+use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Promise;
 use Ostrolucky\Stdinho\ProgressBar;
@@ -14,7 +15,6 @@ class PipeBufferer implements BuffererInterface
     private $logger;
     private $inputStream;
     private $outputStream;
-    private $output;
 
     private $mimeType;
     private $filePath;
@@ -22,19 +22,21 @@ class PipeBufferer implements BuffererInterface
 
     private $buffering = true;
 
+    /**
+     * @param resource $inputStream
+     */
     public function __construct(
         LoggerInterface $logger,
-        InputStream $inputStream,
-        ResourceOutputStream $outputStream,
+        $inputStream,
+        ?string $outputPath,
         ConsoleSectionOutput $output
     ) {
         $this->logger = $logger;
-        $this->inputStream = $inputStream;
-        $this->outputStream = $outputStream;
-        $this->output = $output;
+        $this->inputStream = new ResourceInputStream($inputStream);
+        $this->outputStream = new ResourceOutputStream($fileOutput = $outputPath ? fopen($outputPath, 'w') : tmpfile());
         $this->mimeType = new \Amp\Deferred;
-        $this->filePath = stream_get_meta_data($this->outputStream->getResource())['uri'];
-        $this->progressBar = new ProgressBar($this->output, 0, 'buffer');
+        $this->filePath = $outputPath ?: stream_get_meta_data($fileOutput)['uri'];
+        $this->progressBar = new ProgressBar($output, 0, 'buffer');
     }
 
     public function __invoke(): \Generator
@@ -47,9 +49,8 @@ class PipeBufferer implements BuffererInterface
 
             if ($bytesDownloaded === 0) {
                 $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
-                $this->logger->debug("Stdin MIME type detected: $mimeType");
+                $this->logger->debug(sprintf('Stdin MIME type detected: "%s"', $mimeType));
                 $this->mimeType->resolve($mimeType);
-                $this->output->writeln('');
             }
 
             $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
