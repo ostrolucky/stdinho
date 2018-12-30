@@ -69,7 +69,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         \Amp\Loop::run(function() use ($addressPort, $clientHandler, $logger, $firstSection, $bufferHandler) {
             $bufferHandler();
             $server = \Amp\socket\listen($addressPort);
-            $firstSection->writeln('<info>Connection opened at http://' . $server->getAddress() . '</info>');
+            $firstSection->writeln("<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>");
             while ($socket = yield $server->accept()) {
                 $clientHandler($socket);
             }
