@@ -18,8 +18,9 @@ class PipeBufferer implements BuffererInterface
 
     private $mimeType;
     private $filePath;
+    private $progressBar;
+
     private $buffering = true;
-    private $progressBar = 0;
 
     public function __construct(
         LoggerInterface $logger,
