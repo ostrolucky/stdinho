@@ -22,9 +22,6 @@ class PipeBufferer implements BuffererInterface
 
     private $deferred;
 
-    /**
-     * @param resource $inputStream
-     */
     public function __construct(
         LoggerInterface $logger,
         InputStream $inputStream,
@@ -46,7 +43,7 @@ class PipeBufferer implements BuffererInterface
 
         $bytesDownloaded = 0;
         while (null !== $chunk = yield $this->inputStream->read()) {
-            yield $promise = $outputStream->write($chunk);
+            $promise = $outputStream->write($chunk);
 
             if ($this->deferred) {
                 $deferred = $this->deferred;
@@ -61,6 +58,8 @@ class PipeBufferer implements BuffererInterface
             }
 
             $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
+
+            yield $promise;
         }
 
         if ($this->deferred) {
