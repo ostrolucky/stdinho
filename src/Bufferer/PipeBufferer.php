@@ -3,8 +3,7 @@
 namespace Ostrolucky\Stdinho\Bufferer;
 
 use Amp\ByteStream\InputStream;
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
+use Amp\Deferred;
 use Amp\Promise;
 use Ostrolucky\Stdinho\ProgressBar;
 use Psr\Log\LoggerInterface;
@@ -14,7 +13,6 @@ class PipeBufferer implements BuffererInterface
 {
     private $logger;
     private $inputStream;
-    private $outputStream;
 
     private $mimeType;
     private $filePath;
@@ -22,20 +20,21 @@ class PipeBufferer implements BuffererInterface
 
     private $buffering = true;
 
+    private $deferred;
+
     /**
      * @param resource $inputStream
      */
     public function __construct(
         LoggerInterface $logger,
-        $inputStream,
+        InputStream $inputStream,
         ?string $outputPath,
         ConsoleSectionOutput $output
     ) {
         $this->logger = $logger;
-        $this->inputStream = new ResourceInputStream($inputStream);
-        $this->outputStream = new ResourceOutputStream($fileOutput = $outputPath ? fopen($outputPath, 'w') : tmpfile());
+        $this->inputStream = $inputStream;
         $this->mimeType = new \Amp\Deferred;
-        $this->filePath = $outputPath ?: stream_get_meta_data($fileOutput)['uri'];
+        $this->filePath = $outputPath ?? \tempnam(\sys_get_temp_dir(), 'stdinho') . '.tmp';
         $this->progressBar = new ProgressBar($output, 0, 'buffer');
     }
 
@@ -43,9 +42,17 @@ class PipeBufferer implements BuffererInterface
     {
         $this->logger->debug("Saving stdin to $this->filePath");
 
+        $outputStream = yield \Amp\File\open($this->filePath, 'wb');
+
         $bytesDownloaded = 0;
         while (null !== $chunk = yield $this->inputStream->read()) {
-            yield $this->outputStream->write($chunk);
+            yield $promise = $outputStream->write($chunk);
+
+            if ($this->deferred) {
+                $deferred = $this->deferred;
+                $this->deferred = null;
+                $deferred->resolve($promise);
+            }
 
             if ($bytesDownloaded === 0) {
                 $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
@@ -54,6 +61,12 @@ class PipeBufferer implements BuffererInterface
             }
 
             $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
+        }
+
+        if ($this->deferred) {
+            $deferred = $this->deferred;
+            $this->deferred = null;
+            $deferred->resolve(0);
         }
 
         $this->buffering = false;
@@ -74,6 +87,15 @@ class PipeBufferer implements BuffererInterface
     public function isBuffering(): bool
     {
         return $this->buffering;
+    }
+
+    public function waitForWrite(): Promise
+    {
+        if (!$this->deferred) {
+            $this->deferred = new Deferred;
+        }
+
+        return $this->deferred->promise();
     }
 
     public function getCurrentProgress(): int

@@ -31,6 +31,11 @@ class ResolvedBufferer implements BuffererInterface
         return false;
     }
 
+    public function waitForWrite(): Promise
+    {
+        return new Success(0);
+    }
+
     public function getMimeType(): Promise
     {
         return new Success($this->mimeType);

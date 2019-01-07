@@ -2,8 +2,6 @@
 
 namespace Ostrolucky\Stdinho;
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
 use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
 use Symfony\Component\Console\Helper\DescriptorHelper;
@@ -52,7 +50,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         $logger = new ConsoleLogger($firstSection = $output->section());
 
         $bufferer = $hasStdin ?
-            new PipeBufferer($logger, $stdin, $filePath, $output->section()) :
+            new PipeBufferer($logger, \Amp\ByteStream\getStdin(), $filePath, $output->section()) :
             new ResolvedBufferer($filePath)
         ;
 
