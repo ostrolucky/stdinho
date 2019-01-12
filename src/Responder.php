@@ -2,8 +2,8 @@
 
 namespace Ostrolucky\Stdinho;
 
+use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\StreamException;
-use Amp\File\Handle;
 use Amp\Socket\Socket;
 use Ostrolucky\Stdinho\Bufferer\BuffererInterface;
 use Psr\Log\LoggerInterface;
@@ -27,9 +27,6 @@ class Responder
         $remoteAddress = $socket->getRemoteAddress();
         $this->logger->debug("Accepted connection from $remoteAddress:\n" . trim(yield $socket->read()));
 
-        /** @var Handle $handle */
-        $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'rb');
-
         $header = [
             'HTTP/1.1 200 OK',
             'Content-Type:' . yield $this->bufferer->getMimeType(),
@@ -49,26 +46,42 @@ class Responder
             $remoteAddress
         );
 
+        $handle = new ResourceInputStream(fopen($this->bufferer->getFilePath(), 'rb'));
+
         try {
-            while (($chunk = yield $handle->read()) || $this->bufferer->isBuffering()) {
-                // we reached end of the buffer, but it's still buffering
-                if ($chunk === null) {
+            while (true) {
+                $buffererProgress = $this->bufferer->getCurrentProgress();
+
+                /**
+                 * Not trying to read the buffer when connected client caught up to it is important for following:
+                 *
+                 * 1. Reduce CPU usage and potential block operations thanks to avoiding executing logic in read()
+                 * 2. Prevent ResourceInputStream to close the resource when it detects feof. This serves as workaround.
+                 *
+                 * @see https://github.com/ostrolucky/stdinho/pull/2
+                 * @see https://github.com/amphp/byte-stream/issues/47
+                 */
+                if ($buffererProgress <= $progressBar->step && $this->bufferer->isBuffering()) {
                     yield $this->bufferer->waitForWrite();
                     continue;
+                }
+
+                if (($chunk = yield $handle->read()) === null) {
+                    break; // No more buffering and client caught up to it -> finish download
                 }
 
                 yield $socket->write($chunk);
 
                 $progressBar->max = $this->bufferer->getCurrentProgress();
                 $progressBar->advance(strlen($chunk));
-            };
+            }
             $progressBar->finish();
             $this->logger->debug("$remoteAddress finished download");
         } catch (StreamException $exception) {
             $this->logger->debug("$remoteAddress aborted download");
         }
 
-        $handle->end();
+        $handle->close();
         $socket->end();
     }
 }
