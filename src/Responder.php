@@ -22,13 +22,13 @@ class Responder
         $this->consoleOutput = $consoleOutput;
     }
 
-    public function __invoke(Socket $socket)
+    public function __invoke(Socket $socket): \Generator
     {
         $remoteAddress = $socket->getRemoteAddress();
         $this->logger->debug("Accepted connection from $remoteAddress:\n" . trim(yield $socket->read()));
 
         /** @var Handle $handle */
-        $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'r');
+        $handle = yield \Amp\File\open($this->bufferer->getFilePath(), 'rb');
 
         $header = "HTTP/1.1 200 OK\nContent-Type: " . yield $this->bufferer->getMimeType();
         if (!$this->bufferer->isBuffering()) {
@@ -48,6 +48,7 @@ class Responder
             while (($chunk = yield $handle->read()) || $this->bufferer->isBuffering()) {
                 // we reached end of the buffer, but it's still buffering
                 if ($chunk === null) {
+                    yield $this->bufferer->waitForWrite();
                     continue;
                 }
 

@@ -2,9 +2,9 @@
 
 namespace Ostrolucky\Stdinho\Bufferer;
 
-use Amp\ByteStream\InputStream;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
+use Amp\Deferred;
 use Amp\Promise;
 use Ostrolucky\Stdinho\ProgressBar;
 use Psr\Log\LoggerInterface;
@@ -21,6 +21,10 @@ class PipeBufferer implements BuffererInterface
     private $progressBar;
 
     private $buffering = true;
+    /**
+     * @var Deferred|null
+     */
+    private $deferred;
 
     /**
      * @param resource $inputStream
@@ -33,7 +37,7 @@ class PipeBufferer implements BuffererInterface
     ) {
         $this->logger = $logger;
         $this->inputStream = new ResourceInputStream($inputStream);
-        $this->outputStream = new ResourceOutputStream($fileOutput = $outputPath ? fopen($outputPath, 'w') : tmpfile());
+        $this->outputStream = new ResourceOutputStream($fileOutput = $outputPath ? fopen($outputPath, 'wb') : tmpfile());
         $this->mimeType = new \Amp\Deferred;
         $this->filePath = $outputPath ?: stream_get_meta_data($fileOutput)['uri'];
         $this->progressBar = new ProgressBar($output, 0, 'buffer');
@@ -46,6 +50,7 @@ class PipeBufferer implements BuffererInterface
         $bytesDownloaded = 0;
         while (null !== $chunk = yield $this->inputStream->read()) {
             yield $this->outputStream->write($chunk);
+            $this->resolveDeferrer();
 
             if ($bytesDownloaded === 0) {
                 $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
@@ -59,6 +64,7 @@ class PipeBufferer implements BuffererInterface
         $this->buffering = false;
         $this->progressBar->finish();
         $this->logger->debug("Stdin transfer done, $bytesDownloaded bytes downloaded");
+        $this->resolveDeferrer();
     }
 
     public function getFilePath(): string
@@ -76,8 +82,24 @@ class PipeBufferer implements BuffererInterface
         return $this->buffering;
     }
 
+    public function waitForWrite(): Promise
+    {
+        return ($this->deferred = $this->deferred ?: new Deferred())->promise();
+    }
+
     public function getCurrentProgress(): int
     {
         return $this->progressBar->step;
+    }
+
+    private function resolveDeferrer(): void
+    {
+        if (!$this->deferred) {
+            return;
+        }
+
+        $deferrer = $this->deferred;
+        $this->deferred = null;
+        $deferrer->resolve();
     }
 }
