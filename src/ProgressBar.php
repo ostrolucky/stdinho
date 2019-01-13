@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ostrolucky\Stdinho;
 
 use Symfony\Component\Console\Helper\Helper;
@@ -8,16 +10,46 @@ use Symfony\Component\Console\Terminal;
 
 class ProgressBar
 {
-    private $format;
-    private $placeholders;
+    /**
+     * @var string[]
+     */
+    private $format = [];
+    /**
+     * @var callable[]
+     */
+    private $placeholders = [];
+    /**
+     * @var null|float
+     */
     private $lastWriteTime;
+    /**
+     * @var ConsoleSectionOutput
+     */
     private $output;
+    /**
+     * @var int
+     */
     public $step = 0;
+    /**
+     * @var int
+     */
     public $max;
+    /**
+     * @var int
+     */
     private $startTime;
+    /**
+     * @var float
+     */
     private $percent = 0.0;
+    /**
+     * @var Terminal
+     */
     private $terminal;
 
+    /**
+     * @var bool
+     */
     private $firstRun = true;
 
     public function __construct(ConsoleSectionOutput $output, int $max, string $format, string $host = null)
@@ -29,30 +61,30 @@ class ProgressBar
             'portal' => '[%host%] Downloaded: %current_volume% | %speed% | %elapsed%/%estimated% | %percent%%',
         ][$format];
         $this->placeholders = [
-            'elapsed' => function (ProgressBar $bar) {
+            'elapsed' => function (self $bar) {
                 return Helper::formatTime(time() - $bar->startTime);
             },
-            'estimated' => function (ProgressBar $bar) {
+            'estimated' => function (self $bar) {
                 $progress = $bar->step;
 
                 return Helper::formatTime($progress ? round((time() - $bar->startTime) / $progress * $bar->max) : 0);
             },
-            'current' => function (ProgressBar $bar) {
+            'current' => function (self $bar) {
                 return str_pad($bar->step, strlen($bar->max), ' ', STR_PAD_LEFT);
             },
-            'percent' => function (ProgressBar $bar) {
+            'percent' => function (self $bar) {
                 return floor($bar->percent * 100);
             },
-            'current_volume' => function (ProgressBar $bar) {
+            'current_volume' => function (self $bar) {
                 return Helper::formatMemory($bar->step);
             },
-            'elapsed_label' => function (ProgressBar $bar) {
+            'elapsed_label' => function (self $bar) {
                 return $bar->max >= $bar->step ? '<info>Finished</info> in' : 'Elapsed';
             },
-            'speed' => function (ProgressBar $bar) {
+            'speed' => function (self $bar) {
                 return Helper::formatMemory($bar->step / max(1, time() - $bar->startTime)).'/s';
             },
-            'max_volume' => function (ProgressBar $bar) {
+            'max_volume' => function (self $bar) {
                 return Helper::formatMemory($bar->max);
             },
             'host' => function () use ($host) {
@@ -68,19 +100,21 @@ class ProgressBar
      *
      * @param int $step Number of steps to advance
      */
-    public function advance(int $step)
+    public function advance(int $step): void
     {
         $this->setProgress($this->step + $step);
     }
 
-    public function setProgress(int $step)
+    public function setProgress(int $step): void
     {
         $this->step = $step;
         $this->percent = $this->max ? (float)$step / $this->max : 0;
 
-        if (microtime(true) - $this->lastWriteTime >= ($this->output->isDecorated() ? .1 : 1)) {
-            $this->overwrite($this->buildLine());
+        if (microtime(true) - $this->lastWriteTime < ($this->output->isDecorated() ? .1 : 1)) {
+            return;
         }
+
+        $this->overwrite($this->buildLine());
     }
 
     /**
@@ -100,7 +134,7 @@ class ProgressBar
      */
     private function overwrite(string $message): void
     {
-        if ( ! $this->firstRun) {
+        if (!$this->firstRun) {
             $this->output->clear(1);
         }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ostrolucky\Stdinho;
 
 use Amp\ByteStream\ResourceInputStream;
@@ -11,8 +13,17 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
 class Responder
 {
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
+    /**
+     * @var BuffererInterface
+     */
     private $bufferer;
+    /**
+     * @var ConsoleOutput
+     */
     private $consoleOutput;
 
     public function __construct(LoggerInterface $logger, BuffererInterface $bufferer, ConsoleOutput $consoleOutput)
@@ -25,19 +36,15 @@ class Responder
     public function __invoke(Socket $socket): \Generator
     {
         $remoteAddress = $socket->getRemoteAddress();
-        $this->logger->debug("Accepted connection from $remoteAddress:\n" . trim(yield $socket->read()));
+        $this->logger->debug("Accepted connection from $remoteAddress:\n".trim(yield $socket->read()));
 
-        $header = [
-            'HTTP/1.1 200 OK',
-            'Content-Type:' . yield $this->bufferer->getMimeType(),
-            'Connection: close',
-        ];
+        $header = ['HTTP/1.1 200 OK', 'Content-Type:'.yield $this->bufferer->getMimeType(), 'Connection: close'];
 
         if (!$this->bufferer->isBuffering()) {
             $header[] = "Content-Length: {$this->bufferer->getCurrentProgress()}";
         }
 
-        yield $socket->write(implode("\r\n", $header) . "\r\n\r\n");
+        yield $socket->write(implode("\r\n", $header)."\r\n\r\n");
 
         $progressBar = new ProgressBar(
             $this->consoleOutput->section(),
@@ -63,6 +70,7 @@ class Responder
                  */
                 if ($buffererProgress <= $progressBar->step && $this->bufferer->isBuffering()) {
                     yield $this->bufferer->waitForWrite();
+
                     continue;
                 }
 

@@ -1,0 +1,10 @@
+version: 2.1
+
+orbs:
+  coding-standard: ostrolucky/php-coding-standard@0.1
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - coding-standard/default

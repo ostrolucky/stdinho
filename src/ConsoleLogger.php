@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ostrolucky\Stdinho;
 
 use Psr\Log\AbstractLogger;
@@ -17,7 +19,10 @@ class ConsoleLogger extends AbstractLogger
         $this->output = $output;
     }
 
-    public function log($level, $message, array $context = [])
+    /**
+     * {@inheritdoc}
+     */
+    public function log($level, $message, array $context = []): void
     {
         $this->output->writeln(
             sprintf('%s <comment>[%s]</comment> <fg=white>%s</>', date('H:i:s'), $level, $message),

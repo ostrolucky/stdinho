@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho\Bufferer;
 
@@ -8,8 +9,17 @@ use Amp\Success;
 
 class ResolvedBufferer implements BuffererInterface
 {
+    /**
+     * @var string
+     */
     private $filePath;
+    /**
+     * @var int
+     */
     private $filesize;
+    /**
+     * @var string
+     */
     private $mimeType;
 
     public function __construct(string $filePath)
@@ -19,7 +29,10 @@ class ResolvedBufferer implements BuffererInterface
         $this->mimeType = (new \finfo(FILEINFO_MIME))->file($filePath);
     }
 
-    public function __invoke() {}
+    public function __invoke(): Promise
+    {
+        return new Success();
+    }
 
     public function getFilePath(): string
     {

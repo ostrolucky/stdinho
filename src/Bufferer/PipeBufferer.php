@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ostrolucky\Stdinho\Bufferer;
 
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
+use Amp\Coroutine;
 use Amp\Deferred;
 use Amp\Promise;
 use Ostrolucky\Stdinho\ProgressBar;
@@ -12,14 +15,35 @@ use Symfony\Component\Console\Output\ConsoleSectionOutput;
 
 class PipeBufferer implements BuffererInterface
 {
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
+    /**
+     * @var ResourceInputStream
+     */
     private $inputStream;
+    /**
+     * @var ResourceOutputStream
+     */
     private $outputStream;
 
+    /**
+     * @var Deferred
+     */
     private $mimeType;
+    /**
+     * @var string
+     */
     private $filePath;
+    /**
+     * @var ProgressBar
+     */
     private $progressBar;
 
+    /**
+     * @var bool
+     */
     private $buffering = true;
     /**
      * @var Deferred|null
@@ -37,34 +61,38 @@ class PipeBufferer implements BuffererInterface
     ) {
         $this->logger = $logger;
         $this->inputStream = new ResourceInputStream($inputStream);
-        $this->outputStream = new ResourceOutputStream($fileOutput = $outputPath ? fopen($outputPath, 'wb') : tmpfile());
-        $this->mimeType = new \Amp\Deferred;
-        $this->filePath = $outputPath ?: stream_get_meta_data($fileOutput)['uri'];
+        $this->outputStream = new ResourceOutputStream($fOutput = $outputPath ? fopen($outputPath, 'wb') : tmpfile());
+        $this->mimeType = new Deferred();
+        $this->filePath = $outputPath ?: stream_get_meta_data($fOutput)['uri'];
         $this->progressBar = new ProgressBar($output, 0, 'buffer');
     }
 
-    public function __invoke(): \Generator
+    public function __invoke(): Promise
     {
-        $this->logger->debug("Saving stdin to $this->filePath");
+        $generator = function (): \Generator {
+            $this->logger->debug("Saving stdin to $this->filePath");
 
-        $bytesDownloaded = 0;
-        while (null !== $chunk = yield $this->inputStream->read()) {
-            yield $this->outputStream->write($chunk);
-            $this->resolveDeferrer();
+            $bytesDownloaded = 0;
+            while (null !== $chunk = yield $this->inputStream->read()) {
+                yield $this->outputStream->write($chunk);
+                $this->resolveDeferrer();
 
-            if ($bytesDownloaded === 0) {
-                $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
-                $this->logger->debug(sprintf('Stdin MIME type detected: "%s"', $mimeType));
-                $this->mimeType->resolve($mimeType);
+                if ($bytesDownloaded === 0) {
+                    $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
+                    $this->logger->debug(sprintf('Stdin MIME type detected: "%s"', $mimeType));
+                    $this->mimeType->resolve($mimeType);
+                }
+
+                $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
             }
 
-            $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
-        }
+            $this->buffering = false;
+            $this->progressBar->finish();
+            $this->logger->debug("Stdin transfer done, $bytesDownloaded bytes downloaded");
+            $this->resolveDeferrer();
+        };
 
-        $this->buffering = false;
-        $this->progressBar->finish();
-        $this->logger->debug("Stdin transfer done, $bytesDownloaded bytes downloaded");
-        $this->resolveDeferrer();
+        return new Coroutine($generator());
     }
 
     public function getFilePath(): string
