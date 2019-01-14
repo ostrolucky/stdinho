@@ -75,7 +75,6 @@ class PipeBufferer implements BuffererInterface
             $bytesDownloaded = 0;
             while (null !== $chunk = yield $this->inputStream->read()) {
                 yield $this->outputStream->write($chunk);
-                $this->resolveDeferrer();
 
                 if ($bytesDownloaded === 0) {
                     $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
@@ -84,6 +83,7 @@ class PipeBufferer implements BuffererInterface
                 }
 
                 $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
+                $this->resolveDeferrer();
             }
 
             $this->buffering = false;
