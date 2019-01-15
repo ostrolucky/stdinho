@@ -51,11 +51,11 @@ class Command extends \Symfony\Component\Console\Command\Command
 
         if (!$hasStdin) {
             if (!$filePath) {
-                return $errorHandler("Path $filePath does not exist!");
+                return $errorHandler('Please pipe stdin into '.APP_NAME.', or provide file path via --file option');
             }
 
             if (!file_exists($filePath)) {
-                return $errorHandler('Please pipe stdin into '.APP_NAME.', or provide file path via --file option');
+                return $errorHandler("Path $filePath does not exist!");
             }
         }
 
