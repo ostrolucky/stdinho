@@ -20,6 +20,11 @@
         "symfony/console": "^4.1@beta",
         "symfony/polyfill-php72": "^1.7"
     },
+    "require-dev": {
+        "amphp/artax": "^3.0",
+        "amphp/process": "dev-master#e7e2821 as 1.0.3",
+        "phpunit/phpunit": "^7.5"
+    },
     "config": {
         "sort-packages": true
     },
