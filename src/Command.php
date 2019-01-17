@@ -7,18 +7,22 @@ namespace Ostrolucky\Stdinho;
 use Amp\Loop;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
 use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
-use Symfony\Component\Console\Helper\DescriptorHelper;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use function Amp\asyncCoroutine;
 use function Amp\Socket\listen;
 
 class Command extends \Symfony\Component\Console\Command\Command
 {
+    /**
+     * @var bool
+     */
+    private $hasStdin = false;
+
     protected function configure(): void
     {
         $this
@@ -33,6 +37,26 @@ class Command extends \Symfony\Component\Console\Command\Command
         ;
     }
 
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        $this->hasStdin = ftell(STDIN) !== false && !stream_isatty(STDIN);
+        $filePath = $input->getOption('file');
+
+        if ($this->hasStdin) {
+            return;
+        }
+
+        if (!$filePath) {
+            throw new InvalidOptionException(
+                'Please pipe stdin into '.APP_NAME.', or provide file path via --file option'
+            );
+        }
+
+        if (!file_exists($filePath)) {
+            throw new InvalidOptionException(sprintf('Path "%s" does not exist!', $filePath));
+        }
+    }
+
     /**
      * @param ConsoleOutput $output
      */
@@ -40,29 +64,11 @@ class Command extends \Symfony\Component\Console\Command\Command
     {
         $addressPort = $input->getArgument('addressPort');
         $filePath = $input->getOption('file');
-        $hasStdin = ftell($stdin = STDIN) !== false && !stream_isatty($stdin);
-
-        $errorHandler = function ($message) use ($input, $output): int {
-            (new DescriptorHelper())->describe($output, $this);
-            (new SymfonyStyle($input, $output))->error($message);
-
-            return 1;
-        };
-
-        if (!$hasStdin) {
-            if (!$filePath) {
-                return $errorHandler('Please pipe stdin into '.APP_NAME.', or provide file path via --file option');
-            }
-
-            if (!file_exists($filePath)) {
-                return $errorHandler("Path $filePath does not exist!");
-            }
-        }
 
         $logger = new ConsoleLogger($firstSection = $output->section());
 
-        $bufferer = $hasStdin ?
-            new PipeBufferer($logger, $stdin, $filePath, $output->section()) :
+        $bufferer = $this->hasStdin ?
+            new PipeBufferer($logger, STDIN, $filePath, $output->section()) :
             new ResolvedBufferer($filePath)
         ;
 
