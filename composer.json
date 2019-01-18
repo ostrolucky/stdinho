@@ -22,7 +22,7 @@
     },
     "require-dev": {
         "amphp/artax": "^3.0",
-        "amphp/process": "dev-master#e7e2821 as 1.0.3",
+        "amphp/process": "^1.0.3",
         "phpunit/phpunit": "^7.5"
     },
     "config": {

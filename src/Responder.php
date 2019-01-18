@@ -38,7 +38,12 @@ class Responder
         $remoteAddress = $socket->getRemoteAddress();
         $this->logger->debug("Accepted connection from $remoteAddress:\n".trim(yield $socket->read()));
 
-        $header = ['HTTP/1.1 200 OK', 'Content-Type:'.yield $this->bufferer->getMimeType(), 'Connection: close'];
+        $header = [
+            'HTTP/1.1 200 OK',
+            'Content-Disposition: inline; filename="'.basename($this->bufferer->getFilePath()).'"',
+            'Content-Type:'.yield $this->bufferer->getMimeType(),
+            'Connection: close',
+        ];
 
         if (!$this->bufferer->isBuffering()) {
             $header[] = "Content-Length: {$this->bufferer->getCurrentProgress()}";
