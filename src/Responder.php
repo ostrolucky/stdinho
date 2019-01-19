@@ -49,8 +49,6 @@ class Responder
             $header[] = "Content-Length: {$this->bufferer->getCurrentProgress()}";
         }
 
-        yield $socket->write(implode("\r\n", $header)."\r\n\r\n");
-
         $progressBar = new ProgressBar(
             $this->consoleOutput->section(),
             $this->bufferer->getCurrentProgress(),
@@ -61,6 +59,8 @@ class Responder
         $handle = new ResourceInputStream(fopen($this->bufferer->getFilePath(), 'rb'));
 
         try {
+            yield $socket->write(implode("\r\n", $header)."\r\n\r\n");
+
             while (true) {
                 $buffererProgress = $this->bufferer->getCurrentProgress();
 
