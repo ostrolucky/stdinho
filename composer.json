@@ -1,7 +1,7 @@
 {
     "name": "ostrolucky/stdinho",
     "type": "project",
-    "description": "Open HTTP portal to your standard input stream",
+    "description": "Turn any STDIN/STDOUT into HTTP server",
     "license": "GPL-3.0",
     "authors": [
         {
