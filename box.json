@@ -1,0 +1,4 @@
+{
+	"compression": "GZ",
+	"compactors": "KevinGH\\Box\\Compactor\\Php"
+}
