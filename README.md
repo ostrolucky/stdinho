@@ -38,7 +38,7 @@ composer global require ostrolucky/stdinho
 
 * Stdin. Most universal input.
 * HTTP. Most universal network output.
-* Async = non-blocking. Yes, in PHP.
+* Async = not being limited to just one HTTP client.
 * Cross-platform. Linux/MacOS/Windows.
 * Buffers to temp before client is connected, so no time between is wasted
 * Shows detailed progress of stdin stream and progress of downloading by clients
