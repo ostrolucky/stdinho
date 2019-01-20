@@ -3,18 +3,36 @@ version: 2.1
 orbs:
   coding-standard: ostrolucky/php-coding-standard@0.1.5
 
-jobs:
-  test:
+executors:
+  php71:
     docker:
       - image: circleci/php:7.1-cli-jessie-node-browsers-legacy
+
+commands:
+  composer:
+    parameters:
+      extra:
+        type: string
+        default: ''
+    steps:
+      - run: composer update -n --no-progress --prefer-dist << parameters.extra >>
+jobs:
+  test_71:
+    executor: php71
+    steps:
+      - checkout
+      - composer
+      - run: vendor/bin/phpunit tests
+  test_lowest:
+    executor: php71
     steps:
       - checkout
       - restore_cache:
-          keys:
-            - composer-{{ checksum "composer.lock" }}
-      - run: composer install -n --no-progress --prefer-dist
+          key: composer-{{ checksum "composer.json" }}
+      - composer:
+          extra: --prefer-lowest
       - save_cache:
-          key: composer-{{ checksum "composer.lock" }}
+          key: composer-{{ checksum "composer.json" }}
           paths:
             - vendor
       - run: vendor/bin/phpunit tests
@@ -24,4 +42,5 @@ workflows:
   main:
     jobs:
       - coding-standard/default
-      - test
+      - test_71
+      - test_lowest
