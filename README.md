@@ -57,38 +57,71 @@ $ stdinho --help
 ``` 
 
 ## Example use cases
+<details><summary>Video streaming</summary>
+<p>
+
 ```bash
-## Use case 1: Video streaming
 # Server
 $ stdinho 0.0.0.0:1337 < /file/to/a/movie.mp4
 # Client
 $ firefox http://127.0.0.1:1337
+```
 
-## Use case 2: Simple one-way chat
+</p>
+</details>
+<details><summary>Simple one-way chat</summary>
+<p>
+
+```bash
+# Server
 # Server (broadcaster)
 $ { while read a; do echo $a; done }|bin/stdinho 127.0.0.1:1337
 # Client
 curl 127.0.0.1:1337
+```
 
-## Use case 3: Share application logs in realtime 
+</p>
+</details>
+<details><summary>Share application logs in realtime</summary>
+<p>
+
+```bash
 # Server
 $ tail -f project/var/log/*.log|stdinho 0.0.0.0:1337
 # Client
 $ curl 127.0.0.1:1337 
+```
 
-## Use case 4: Stream a folder, including compressing
+</p>
+</details>
+<details><summary>Stream a folder, including compression</summary>
+<p>
+
+```bash
 # Server
 $ zip -qr - project|stdinho 0.0.0.0:1337 -f project.zip
 # Client
 $ curl 127.0.0.1:1337 -o project.zip # Saves it to project.zip
+```
 
-## Use case 5: Dump remote database and stream it to different database on the fly via middle man
+</p>
+</details>
+<details><summary>Dump remote database and stream it to different database on the fly via middle man</summary>
+<p>
+
+```bash
 # Server
 $ ssh admin@example.com "mysqldump -u root -ptoor database|gzip -c"|stdinho 0.0.0.0:1337 -f "$(date).sql.gz" # also saves the backup locally
 # Client
 $ curl 127.0.0.1:1337|gunzip|mysql -u root -ptoor database # Import it directly to local DB
+```
 
-## Use case 6: 
+</p>
+</details>
+<details><summary>Use case from GIF in this README</summary>
+<p>
+
+```bash
 #   There is bad connectivity between A (public server) and B (user connected to network via special VPN), 
 #   but good connectivity between A and C (on same local network as A, but not public). 
 #   However, B and C are behind NAT in separate networks, so there is no direct connection between them.
@@ -100,9 +133,10 @@ $ ssh -NR \*:1337:localhost:1337 D #Reverse tunnel. Note: GatewayPorts cannot be
 $ curl http://A.com/big_file.tar.gz|stdinho 0.0.0.0:1337
 # B:
 $ curl D:1337 -o big_file.tar.gz
-
 ```
 
+</p>
+</details>
 
 ## Licensing
 
