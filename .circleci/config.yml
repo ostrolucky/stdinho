@@ -22,16 +22,13 @@ commands:
 jobs:
   test_71:
     executor: php71
-    steps:
+    steps: &steps
       - checkout
       - composer
-      - run: &test vendor/bin/phpunit tests
+      - run: vendor/bin/phpunit
   test_latest_php:
     executor: php
-    steps:
-      - checkout
-      - composer
-      - run: *test
+    steps: *steps
   test_lowest:
     executor: php71
     steps:
@@ -44,7 +41,7 @@ jobs:
           key: composer-{{ checksum "composer.json" }}
           paths:
             - vendor
-      - run: *test
+      - run: vendor/bin/phpunit
 
 workflows:
   version: 2

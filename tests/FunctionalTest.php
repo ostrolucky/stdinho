@@ -28,7 +28,7 @@ class FunctionalTest extends TestCase
             yield $this->process->start();
 
             $this->httpClient = new DefaultClient();
-            $this->httpClient->setOption(DefaultClient::OP_TRANSFER_TIMEOUT, 300);
+            $this->httpClient->setOption(DefaultClient::OP_TRANSFER_TIMEOUT, 400);
 
             // wait till server booted and listens to connections
             self::assertStringStartsWith('Connection opened', yield $this->process->getStdout()->read());

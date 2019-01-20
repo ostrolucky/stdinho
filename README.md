@@ -1,5 +1,10 @@
 # stdinho
 
+[![Latest Version on Packagist][ico-version]][link-packagist]
+[![Software License][ico-license]](LICENSE.md)
+[![Build Status][ico-circleci]][link-circleci]
+[![Coverage Status][ico-scrutinizer]][link-scrutinizer]
+
 
 Every once in a while, you need to share with somebody stuff you don't currently have at hand.
 So, what do you do?
@@ -147,3 +152,13 @@ GPLv3 license. Please see [License File](LICENSE.md) for more information.
 
 - [inetd](https://debian-administration.org/article/371/A_web_server_in_a_shell_script) - Really old general purpose server, it's preinstalled on BSDs. I don't recommend to use it though if you don't have time to play around ;) You will have to write config for it, simple bash script and write HTTP headers by hand. And you will have no monitoring at hand.
 - [websocketd](https://github.com/joewalnes/websocketd) If you need to serve output of a program over websockets instead of HTTP
+
+
+[ico-version]: https://img.shields.io/packagist/v/ostrolucky/stdinho.svg?style=flat-square
+[ico-license]: https://img.shields.io/badge/license-GPL-brightgreen.svg?style=flat-square
+[ico-circleci]: https://circleci.com/gh/ostrolucky/stdinho.svg?style=shield
+[ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/ostrolucky/stdinho.svg?style=flat-square
+
+[link-packagist]: https://packagist.org/packages/ostrolucky/stdinho
+[link-circleci]: https://circleci.com/gh/ostrolucky/stdinho
+[link-scrutinizer]: https://scrutinizer-ci.com/g/ostrolucky/stdinho/code-structure
