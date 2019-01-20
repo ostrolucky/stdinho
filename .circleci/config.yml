@@ -1,9 +1,12 @@
 version: 2.1
 
 orbs:
-  coding-standard: ostrolucky/php-coding-standard@0.1.5
+  coding-standard: ostrolucky/php-coding-standard@0.1.10
 
 executors:
+  php:
+    docker:
+      - image: circleci/php:cli-node-browsers
   php71:
     docker:
       - image: circleci/php:7.1-cli-jessie-node-browsers-legacy
@@ -22,7 +25,13 @@ jobs:
     steps:
       - checkout
       - composer
-      - run: vendor/bin/phpunit tests
+      - run: &test vendor/bin/phpunit tests
+  test_latest_php:
+    executor: php
+    steps:
+      - checkout
+      - composer
+      - run: *test
   test_lowest:
     executor: php71
     steps:
@@ -35,7 +44,7 @@ jobs:
           key: composer-{{ checksum "composer.json" }}
           paths:
             - vendor
-      - run: vendor/bin/phpunit tests
+      - run: *test
 
 workflows:
   version: 2
@@ -44,3 +53,4 @@ workflows:
       - coding-standard/default
       - test_71
       - test_lowest
+      - test_latest_php
