@@ -22,6 +22,10 @@ class Command extends \Symfony\Component\Console\Command\Command
      * @var bool
      */
     private $hasStdin = false;
+    /**
+     * @var string[]
+     */
+    private $customHttpHeaders = [];
 
     protected function configure(): void
     {
@@ -33,14 +37,29 @@ class Command extends \Symfony\Component\Console\Command\Command
                 InputOption::VALUE_REQUIRED,
                 'File path. If no stdin is provided, this is used as source. Otherwise, it is target where stdin is copied to'
             )
-            ->setDescription('Open HTTP portal to your standard input stream')
+            ->addOption(
+                'http-headers',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Custom HTTP headers to append to response (in JSON format). Eg. --http-headers=\'["Content-encoding: gzip"]\'',
+                '{}'
+            )
+            ->setDescription('Turn any STDIN/STDOUT into HTTP server')
         ;
     }
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->hasStdin = ftell(STDIN) !== false && !stream_isatty(STDIN);
         $filePath = $input->getOption('file');
+        $json = $input->getOption('http-headers');
+        $this->hasStdin = ftell(STDIN) !== false && !stream_isatty(STDIN);
+        $this->customHttpHeaders = @json_decode($json, true);
+
+        if (!is_array($this->customHttpHeaders)) {
+            throw new InvalidOptionException(
+                sprintf('Invalid JSON "%s" has been used in --http-headers option', $json)
+            );
+        }
 
         if ($this->hasStdin) {
             return;
@@ -73,7 +92,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         ;
 
         $bufferHandler = asyncCoroutine($bufferer);
-        $clientHandler = asyncCoroutine(new Responder($logger, $bufferer, $output));
+        $clientHandler = asyncCoroutine(new Responder($logger, $bufferer, $output, $this->customHttpHeaders));
 
         Loop::run(function () use ($addressPort, $clientHandler, $logger, $firstSection, $bufferHandler) {
             $bufferHandler();

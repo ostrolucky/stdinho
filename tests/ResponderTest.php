@@ -21,7 +21,8 @@ class ResponderTest extends TestCase
         $responder = new Responder(
             $logger = new TestLogger(),
             new ResolvedBufferer(__FILE__),
-            $this->createMock(ConsoleOutput::class)
+            $this->createMock(ConsoleOutput::class),
+            []
         );
 
         $socket = $this->getMockBuilder(ClientSocket::class)

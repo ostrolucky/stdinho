@@ -25,12 +25,24 @@ class Responder
      * @var ConsoleOutput
      */
     private $consoleOutput;
+    /**
+     * @var string[]
+     */
+    private $customHttpHeaders = [];
 
-    public function __construct(LoggerInterface $logger, BuffererInterface $bufferer, ConsoleOutput $consoleOutput)
-    {
+    /**
+     * @param string[] $customHttpHeaders
+     */
+    public function __construct(
+        LoggerInterface $logger,
+        BuffererInterface $bufferer,
+        ConsoleOutput $consoleOutput,
+        array $customHttpHeaders
+    ) {
         $this->logger = $logger;
         $this->bufferer = $bufferer;
         $this->consoleOutput = $consoleOutput;
+        $this->customHttpHeaders = $customHttpHeaders;
     }
 
     public function __invoke(Socket $socket): \Generator
@@ -59,7 +71,7 @@ class Responder
         $handle = new ResourceInputStream(fopen($this->bufferer->getFilePath(), 'rb'));
 
         try {
-            yield $socket->write(implode("\r\n", $header)."\r\n\r\n");
+            yield $socket->write(implode("\r\n", array_merge($header, $this->customHttpHeaders))."\r\n\r\n");
 
             while (true) {
                 $buffererProgress = $this->bufferer->getCurrentProgress();

@@ -87,7 +87,7 @@ curl 127.0.0.1:1337
 
 </p>
 </details>
-<details><summary>Share application logs in realtime</summary>
+<details><summary>Tail application logs in realtime</summary>
 <p>
 
 ```bash
@@ -95,6 +95,9 @@ curl 127.0.0.1:1337
 $ tail -f project/var/log/*.log|stdinho 0.0.0.0:1337
 # Client
 $ curl 127.0.0.1:1337 
+
+# Bonus: gzip transfer encoding (server)
+$ tail -f project/var/*.log|gzip -c|stdinho 0.0.0.0:1337 --http-headers='["Content-Type: text/plain", "Content-Encoding: gzip", "Transfer-Encoding: gzip"]'
 ```
 
 </p>

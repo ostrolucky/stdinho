@@ -12,6 +12,7 @@
     "require": {
         "php": ">=7.1",
         "ext-fileinfo": "*",
+        "ext-json": "*",
         "amphp/amp": "^2.0",
         "amphp/byte-stream": "^1.2.5",
         "amphp/socket": "^0.10",
