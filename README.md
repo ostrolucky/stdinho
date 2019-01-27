@@ -39,9 +39,9 @@ stdinho --help
 
 * async. Yep, in PHP. No restriction on clients downloading simultaneusly
 * buffers to temp file before client is connected, so no time or data in between is lost
-* cross-platform: Linux/MacOS/Windows.
+* cross-platform: Linux/MacOS/Windows
 * detects MIME type and attaches it to HTTP response
-* neat progress bar showing status of buffering and client downloads
+* neat progress bar showing status of buffering and client downloads.
 
 ## Recipes
 <details><summary>Video streaming</summary>
