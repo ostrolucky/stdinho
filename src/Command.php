@@ -42,7 +42,7 @@ class Command extends \Symfony\Component\Console\Command\Command
                 null,
                 InputOption::VALUE_REQUIRED,
                 'Custom HTTP headers to append to response (in JSON format). Eg. --http-headers=\'["Content-encoding: gzip"]\'',
-                '{}'
+                '[]'
             )
             ->setDescription('Turn any STDIN/STDOUT into HTTP server')
         ;
