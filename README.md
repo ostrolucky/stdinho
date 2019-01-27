@@ -30,6 +30,11 @@ As simple as just piping some data in:
 echo hello world|stdinho
 ```
 
+For all options see
+```bash
+stdinho --help
+```
+
 ## Features
 
 * async. Yep, in PHP. No restriction on clients downloading simultaneusly
