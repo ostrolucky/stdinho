@@ -6,30 +6,12 @@
 [![Coverage Status][ico-scrutinizer]][link-scrutinizer]
 
 
-Every once in a while, you need to share with somebody stuff you don't currently have at hand.
-So, what do you do?
+`stdinho` is small command-line tool that creates TCP server, accepts any STDOUT as its STDIN and whoever connects to the server will get this data served as HTTP response.
 
-...
-
-Unless it's just a matter of sending a link, you fetch it for them. 
-This involves **waiting** until your PC finishes downloading/processing.
-Once you have fetched it, you send it to person who needs it. 
-Also, sending it sometimes means to first upload it somewhere, so other person can download it from there.
-This uploading involves again unnecessary **waiting**. I was tired of these waitings...
-
-Here's this pain and its removal visualized:
+It was written from frustration of having to share remote resources with my under-priviliged colleagues on semi-regular basis.
+This typically involves downloading file, uploading file, sending the link, waiting until target finishes downloading file, deleting file. In each stage of the process you would normally have to wait.
 
 ![stdinho animation](https://user-images.githubusercontent.com/496233/47866950-750db900-de00-11e8-8631-d25d723128f5.gif)
-
-
-This tool skips the waiting part, by merging fetching + processing + sending. 
-You can pipe any standard stream into this tool and it immediately makes
-it available via HTTP, as it goes in.
-
-Here is it in action:
-
-
-![stdinho](https://user-images.githubusercontent.com/496233/37237663-e240866e-2416-11e8-9d03-386ae3790d1c.png)
 
 ## Install
 
@@ -39,29 +21,24 @@ Via [Composer](https://getcomposer.org/doc/00-intro.md)
 composer global require ostrolucky/stdinho
 ```
 
+Or grab executable PHAR file from [Releases](releases/latest)
+
+## Usage
+
+As simple as just piping some data in:
+```bash
+echo hello world|stdinho
+```
+
 ## Features
 
-* Stdin. Most universal input.
-* HTTP. Most universal network output.
-* Async = not being limited to just one HTTP client.
-* Cross-platform. Linux/MacOS/Windows.
-* Buffers to temp before client is connected, so no time between is wasted
-* Shows detailed progress of stdin stream and progress of downloading by clients
-* Detects MIME type and attaches it to HTTP response automatically. Streaming video? Browser detects it and plays it immediately.
+* async. Yep, in PHP. No restriction on clients downloading simultaneusly
+* buffers to temp file before client is connected, so no time or data in between is lost
+* cross-platform: Linux/MacOS/Windows.
+* detects MIME type and attaches it to HTTP response
+* neat progress bar showing status of buffering and client downloads
 
-## Configuration
-
-Just supply stdin or provide file via `--file` option to stdinho and that's all. 
-There is option to specify IP/Port on which stdinho should listen at as well.
-
-`--file` acts as a [tee](https://en.wikipedia.org/wiki/Tee_(command)) if both stdin and --file is provided 
-
-You can watch all available options by running. 
-```bash
-$ stdinho --help
-``` 
-
-## Example use cases
+## Recipes
 <details><summary>Video streaming</summary>
 <p>
 
@@ -153,7 +130,7 @@ GPLv3 license. Please see [License File](LICENSE.md) for more information.
 ## See also
 
 
-- [inetd](https://debian-administration.org/article/371/A_web_server_in_a_shell_script) - Really old general purpose server, it's preinstalled on BSDs. I don't recommend to use it though if you don't have time to play around ;) You will have to write config for it, simple bash script and write HTTP headers by hand. And you will have no monitoring at hand.
+- [inetd](https://debian-administration.org/article/371/A_web_server_in_a_shell_script) - Universal internet service daemon. Requires writing config and script for HTTP headers by hand. No buffering or live monitoring.
 - [websocketd](https://github.com/joewalnes/websocketd) If you need to serve output of a program over websockets instead of HTTP
 
 
