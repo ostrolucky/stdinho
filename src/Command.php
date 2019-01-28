@@ -44,6 +44,13 @@ class Command extends \Symfony\Component\Console\Command\Command
                 'Custom HTTP headers to append to response (in JSON format). Eg. --http-headers=\'["Content-encoding: gzip"]\'',
                 '[]'
             )
+            ->addOption(
+                'connections-limit',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Determines after how many client connections should program shut down',
+                INF
+            )
             ->setDescription('Turn any STDIN/STDOUT into HTTP server')
         ;
     }
@@ -81,26 +88,24 @@ class Command extends \Symfony\Component\Console\Command\Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $addressPort = $input->getArgument('addressPort');
-        $filePath = $input->getOption('file');
-
         $logger = new ConsoleLogger($firstSection = $output->section());
 
         $bufferer = $this->hasStdin ?
-            new PipeBufferer($logger, STDIN, $filePath, $output->section()) :
-            new ResolvedBufferer($filePath)
+            new PipeBufferer($logger, STDIN, $input->getOption('file'), $output->section()) :
+            new ResolvedBufferer($input->getOption('file'))
         ;
 
         $bufferHandler = asyncCoroutine($bufferer);
         $clientHandler = asyncCoroutine(new Responder($logger, $bufferer, $output, $this->customHttpHeaders));
 
-        Loop::run(function () use ($addressPort, $clientHandler, $logger, $firstSection, $bufferHandler) {
+        Loop::run(function () use ($input, $clientHandler, $logger, $firstSection, $bufferHandler) {
             $bufferHandler();
-            $server = listen($addressPort);
+            $server = listen($input->getArgument('addressPort'));
             $firstSection->writeln(
                 "<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>\n"
             );
-            while ($socket = yield $server->accept()) {
+            $connectionsLimit = $input->getOption('connections-limit');
+            while ($connectionsLimit-- && ($socket = yield $server->accept())) {
                 $clientHandler($socket);
             }
         });

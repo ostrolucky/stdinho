@@ -22,6 +22,7 @@ if (function_exists('pcntl_signal')) {
 }
 
 $application = new Application(APP_NAME, PrettyVersions::getVersion('ostrolucky/'.APP_NAME));
+$application->setAutoExit(false);
 $application->add($command = new Command(APP_NAME));
 $application
     ->setDefaultCommand($command->getName(), true)
