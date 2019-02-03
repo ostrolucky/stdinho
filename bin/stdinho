@@ -11,7 +11,7 @@ require_once file_exists(__DIR__.$autoloadPath) ? __DIR__.$autoloadPath : __DIR_
 define('APP_NAME', basename(__FILE__));
 
 /**
- * Make temp files self clean on CTRL+C by interupting process termination and exiting cleanly instead.
+ * Make temp files self clean on CTRL+C by interrupting process termination and exiting cleanly instead.
  *
  * @see https://bugs.php.net/bug.php?id=77365
  */

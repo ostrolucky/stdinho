@@ -26,7 +26,7 @@ class ResponderTest extends TestCase
         );
 
         $socket = $this->getMockBuilder(ClientSocket::class)
-            ->setConstructorArgs([$resource = fopen('php://memory', 'rw')])
+            ->setConstructorArgs([$resource = fopen('php://memory', 'rwb')])
             ->setMethods(['read', 'getRemoteAddress'])
             ->getMock()
         ;

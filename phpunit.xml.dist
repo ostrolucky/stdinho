@@ -9,11 +9,8 @@
 
     <filter>
         <whitelist>
-            <directory>.</directory>
-            <exclude>
-                <directory>./tests</directory>
-                <directory>./vendor</directory>
-            </exclude>
+            <file>bin/stdinho</file>
+            <directory>src</directory>
         </whitelist>
     </filter>
 </phpunit>
