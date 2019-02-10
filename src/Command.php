@@ -8,6 +8,7 @@ use Amp\Loop;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
 use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
 use Symfony\Component\Console\Exception\InvalidOptionException;
+use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -59,6 +60,7 @@ class Command extends \Symfony\Component\Console\Command\Command
     {
         $filePath = $input->getOption('file');
         $json = $input->getOption('http-headers');
+        $fileExists = $filePath && file_exists($filePath);
         $this->hasStdin = ftell(STDIN) !== false && !stream_isatty(STDIN);
         $this->customHttpHeaders = @json_decode($json, true);
 
@@ -69,6 +71,12 @@ class Command extends \Symfony\Component\Console\Command\Command
         }
 
         if ($this->hasStdin) {
+            if ($fileExists) {
+                throw new LogicException(
+                    sprintf('File "%s" exists! If you want to overwrite it, please remove it beforehand.', $filePath)
+                );
+            }
+
             return;
         }
 
@@ -78,7 +86,7 @@ class Command extends \Symfony\Component\Console\Command\Command
             );
         }
 
-        if (!file_exists($filePath)) {
+        if (!$fileExists) {
             throw new InvalidOptionException(sprintf('Path "%s" does not exist!', $filePath));
         }
     }
@@ -98,7 +106,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         $bufferHandler = asyncCoroutine($bufferer);
         $clientHandler = asyncCoroutine(new Responder($logger, $bufferer, $output, $this->customHttpHeaders));
 
-        Loop::run(function () use ($input, $clientHandler, $logger, $firstSection, $bufferHandler) {
+        Loop::run(function () use ($input, $clientHandler, $firstSection, $bufferHandler) {
             $bufferHandler();
             $server = listen($input->getArgument('addressPort'));
             $firstSection->writeln(
