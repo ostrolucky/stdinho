@@ -10,6 +10,7 @@ use Amp\Delayed;
 use Amp\Loop;
 use Amp\Process\Process;
 use PHPUnit\Framework\TestCase;
+use function Amp\Promise\timeout;
 use function Amp\Promise\wait;
 
 class FunctionalTest extends TestCase
@@ -31,9 +32,12 @@ class FunctionalTest extends TestCase
     protected function setUp(): void
     {
         Loop::run(function () {
-            $this->process = new Process(
-                'php '.__DIR__.'/coverage-enabling-bin-wrapper.php --connections-limit=1 localhost:1338'
-            );
+            $isCoverageEnabled = array_filter($_SERVER['argv'], function (string $arg) {
+                return strpos($arg, '--coverage') === 0;
+            });
+            $script = $isCoverageEnabled ? 'coverage-enabling-bin-wrapper.php' : '../bin/stdinho';
+
+            $this->process = new Process('php '.__DIR__."/$script --connections-limit=1 localhost:1338");
 
             yield $this->process->start();
 
@@ -49,7 +53,7 @@ class FunctionalTest extends TestCase
     {
         $this->process->getStdin()->close();
         // have to wait due to https://github.com/amphp/process/issues/33
-        wait($this->process->join());
+        wait(timeout($this->process->join(), 500));
     }
 
     /**
@@ -59,7 +63,7 @@ class FunctionalTest extends TestCase
     {
         Loop::run(function () {
             yield $this->process->getStdin()->write('foo');
-            yield new Delayed(20);
+            yield new Delayed(60);
 
             /** @var Response $response */
             $response = yield $this->httpClient->request('http://localhost:1338');
