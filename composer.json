@@ -25,9 +25,9 @@
         "amphp/artax": "^3.0",
         "amphp/parallel": "^1.0.1",
         "amphp/process": "^1.0.3",
-        "phpunit/php-code-coverage": "^6.1",
-        "phpunit/phpcov": "^5.0",
-        "phpunit/phpunit": "^7.5"
+        "phpunit/php-code-coverage": "^6.1|^7.0",
+        "phpunit/phpcov": "^5.0|^6.0",
+        "phpunit/phpunit": "^7.5|^8.0"
     },
     "config": {
         "sort-packages": true
