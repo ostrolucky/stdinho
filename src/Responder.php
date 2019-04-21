@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Ostrolucky\Stdinho;
 
 use Amp\ByteStream\InputStream;
-use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\StreamException;
 use Amp\Socket\Socket;
 use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
@@ -43,13 +42,13 @@ class Responder
         AbstractBufferer $bufferer,
         ConsoleOutput $consoleOutput,
         array $customHttpHeaders,
-        InputStream $inputStream = null
+        InputStream $inputStream
     ) {
         $this->logger = $logger;
         $this->bufferer = $bufferer;
         $this->consoleOutput = $consoleOutput;
         $this->customHttpHeaders = $customHttpHeaders;
-        $this->inputStream = $inputStream ?: new ResourceInputStream(fopen($this->bufferer->filePath, 'rb'));
+        $this->inputStream = $inputStream;
     }
 
     public function __invoke(Socket $socket): \Generator

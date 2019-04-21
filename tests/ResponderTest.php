@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho\Tests;
 
+use Amp\ByteStream\InputStream;
 use Amp\Coroutine;
 use Amp\Socket\ClientSocket;
 use Amp\Success;
@@ -22,7 +23,8 @@ class ResponderTest extends TestCase
             $logger = new TestLogger(),
             new ResolvedBufferer(__FILE__),
             $this->createMock(ConsoleOutput::class),
-            []
+            [],
+            $this->createMock(InputStream::class)
         );
 
         $socket = $this->getMockBuilder(ClientSocket::class)

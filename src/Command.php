@@ -124,7 +124,14 @@ class Command extends \Symfony\Component\Console\Command\Command
             asyncCoroutine($bufferer)();
 
             while ($connectionsLimit-- && ($socket = yield $server->accept())) {
-                asyncCoroutine(new Responder($logger, $bufferer, $output, $this->customHttpHeaders))($socket);
+                $responder = new Responder(
+                    $logger,
+                    $bufferer,
+                    $output,
+                    $this->customHttpHeaders,
+                    new ResourceInputStream(fopen($bufferer->filePath, 'rb'))
+                );
+                asyncCoroutine($responder)($socket);
             }
         });
 
