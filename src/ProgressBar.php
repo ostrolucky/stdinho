@@ -102,12 +102,7 @@ class ProgressBar
      */
     public function advance(int $step): void
     {
-        $this->setProgress($this->step + $step);
-    }
-
-    public function setProgress(int $step): void
-    {
-        $this->step = $step;
+        $this->step += $step;
         $this->percent = $this->max ? (float)$step / $this->max : 0;
 
         if (microtime(true) - $this->lastWriteTime < ($this->output->isDecorated() ? .1 : 1)) {

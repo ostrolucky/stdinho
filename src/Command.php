@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho;
 
+use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\ResourceOutputStream;
 use Amp\Loop;
+use Amp\Socket\Server;
+use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
 use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -52,6 +57,12 @@ class Command extends \Symfony\Component\Console\Command\Command
                 'Determines after how many client connections should program shut down',
                 INF
             )
+            ->addOption(
+                'buffer-size',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'Buffer size in bytes. By default, it is 90% of available disk space'
+            )
             ->setDescription('Turn any STDIN/STDOUT into HTTP server')
         ;
     }
@@ -96,28 +107,55 @@ class Command extends \Symfony\Component\Console\Command\Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $addressPort = $input->getArgument('addressPort');
+        $bufferSize = $input->getOption('buffer-size');
+        $connectionsLimit = (float)$input->getOption('connections-limit');
+        $filePath = $input->getOption('file');
+
+        $server = listen($addressPort);
         $logger = new ConsoleLogger($firstSection = $output->section());
+        $bufferer = $this->createBufferer($output, $logger, $server, $filePath, $bufferSize);
 
-        $bufferer = $this->hasStdin ?
-            new PipeBufferer($logger, STDIN, $input->getOption('file'), $output->section()) :
-            new ResolvedBufferer($input->getOption('file'))
-        ;
+        $firstSection->writeln(
+            "<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>\n"
+        );
 
-        $bufferHandler = asyncCoroutine($bufferer);
-        $clientHandler = asyncCoroutine(new Responder($logger, $bufferer, $output, $this->customHttpHeaders));
+        Loop::run(function () use (&$connectionsLimit, $server, $logger, $output, $bufferer) {
+            asyncCoroutine($bufferer)();
 
-        Loop::run(function () use ($input, $clientHandler, $firstSection, $bufferHandler) {
-            $bufferHandler();
-            $server = listen($input->getArgument('addressPort'));
-            $firstSection->writeln(
-                "<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>\n"
-            );
-            $connectionsLimit = $input->getOption('connections-limit');
             while ($connectionsLimit-- && ($socket = yield $server->accept())) {
-                $clientHandler($socket);
+                $responder = new Responder(
+                    $logger,
+                    $bufferer,
+                    $output,
+                    $this->customHttpHeaders,
+                    new ResourceInputStream(fopen($bufferer->filePath, 'rb'))
+                );
+                asyncCoroutine($responder)($socket);
             }
         });
 
         return 0;
+    }
+
+    private function createBufferer(
+        ConsoleOutput $output,
+        LoggerInterface $logger,
+        Server $server,
+        ?string $filePath,
+        ?string $bufferSize
+    ): AbstractBufferer {
+        if (!$this->hasStdin) {
+            return new ResolvedBufferer($filePath);
+        }
+
+        return new PipeBufferer(
+            $logger,
+            new ResourceInputStream(STDIN),
+            new ResourceOutputStream($filePath ? fopen($filePath, 'wb') : tmpfile()),
+            $output->section(),
+            $server,
+            (int)($bufferSize ?? disk_free_space($filePath ?: sys_get_temp_dir()) * .9)
+        );
     }
 }

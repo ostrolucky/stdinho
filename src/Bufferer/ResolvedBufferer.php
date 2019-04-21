@@ -7,12 +7,8 @@ namespace Ostrolucky\Stdinho\Bufferer;
 use Amp\Promise;
 use Amp\Success;
 
-class ResolvedBufferer implements BuffererInterface
+class ResolvedBufferer extends AbstractBufferer
 {
-    /**
-     * @var string
-     */
-    private $filePath;
     /**
      * @var int
      */
@@ -24,7 +20,7 @@ class ResolvedBufferer implements BuffererInterface
 
     public function __construct(string $filePath)
     {
-        $this->filePath = $filePath;
+        parent::__construct($filePath);
         $this->filesize = filesize($filePath);
         $this->mimeType = (new \finfo(FILEINFO_MIME))->file($filePath);
     }
@@ -32,11 +28,6 @@ class ResolvedBufferer implements BuffererInterface
     public function __invoke(): Promise
     {
         return new Success();
-    }
-
-    public function getFilePath(): string
-    {
-        return $this->filePath;
     }
 
     public function isBuffering(): bool

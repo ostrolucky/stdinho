@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho;
 
-use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\InputStream;
 use Amp\ByteStream\StreamException;
 use Amp\Socket\Socket;
-use Ostrolucky\Stdinho\Bufferer\BuffererInterface;
+use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
@@ -18,7 +18,7 @@ class Responder
      */
     private $logger;
     /**
-     * @var BuffererInterface
+     * @var AbstractBufferer
      */
     private $bufferer;
     /**
@@ -29,20 +29,26 @@ class Responder
      * @var string[]
      */
     private $customHttpHeaders = [];
+    /**
+     * @var InputStream
+     */
+    private $inputStream;
 
     /**
      * @param string[] $customHttpHeaders
      */
     public function __construct(
         LoggerInterface $logger,
-        BuffererInterface $bufferer,
+        AbstractBufferer $bufferer,
         ConsoleOutput $consoleOutput,
-        array $customHttpHeaders
+        array $customHttpHeaders,
+        InputStream $inputStream
     ) {
         $this->logger = $logger;
         $this->bufferer = $bufferer;
         $this->consoleOutput = $consoleOutput;
         $this->customHttpHeaders = $customHttpHeaders;
+        $this->inputStream = $inputStream;
     }
 
     public function __invoke(Socket $socket): \Generator
@@ -52,7 +58,7 @@ class Responder
 
         $header = [
             'HTTP/1.1 200 OK',
-            'Content-Disposition: inline; filename="'.basename($this->bufferer->getFilePath()).'"',
+            'Content-Disposition: inline; filename="'.basename($this->bufferer->filePath).'"',
             'Content-Type:'.yield $this->bufferer->getMimeType(),
             'Connection: close',
         ];
@@ -67,8 +73,6 @@ class Responder
             'portal',
             $remoteAddress
         );
-
-        $handle = new ResourceInputStream(fopen($this->bufferer->getFilePath(), 'rb'));
 
         try {
             yield $socket->write(implode("\r\n", array_merge($header, $this->customHttpHeaders))."\r\n\r\n");
@@ -91,14 +95,23 @@ class Responder
                     continue;
                 }
 
-                if (($chunk = yield $handle->read()) === null) {
-                    break; // No more buffering and client caught up to it -> finish download
+                if (null !== $chunk = yield $this->inputStream->read()) {
+                    yield $socket->write($chunk);
+
+                    $progressBar->max = $this->bufferer->getCurrentProgress();
+                    $progressBar->advance(strlen($chunk));
+
+                    continue;
                 }
 
-                yield $socket->write($chunk);
+                if (!$this->bufferer->inputStream) {
+                    break; // All input sources depleted -> finish download
+                }
 
-                $progressBar->max = $this->bufferer->getCurrentProgress();
-                $progressBar->advance(strlen($chunk));
+                // Use fallback inputStream - handy when PipeBufferer exits sooner than it consumes its inputStream
+                $this->inputStream = $this->bufferer->inputStream;
+                // Prevent other potential Responders to consume same inputStream. This can be solved in future
+                $this->bufferer->inputStream = null;
             }
             $progressBar->finish();
             $this->logger->debug("$remoteAddress finished download");
@@ -106,7 +119,6 @@ class Responder
             $this->logger->debug("$remoteAddress aborted download");
         }
 
-        $handle->close();
         $socket->end();
     }
 }
