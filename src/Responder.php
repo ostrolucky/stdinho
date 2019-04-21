@@ -95,7 +95,7 @@ class Responder
                     continue;
                 }
 
-                if (($chunk = yield $this->inputStream->read()) !== null) {
+                if (null !== $chunk = yield $this->inputStream->read()) {
                     yield $socket->write($chunk);
 
                     $progressBar->max = $this->bufferer->getCurrentProgress();
