@@ -4,43 +4,39 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho\Bufferer;
 
-use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\InputStream;
+use Amp\ByteStream\OutputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Coroutine;
 use Amp\Deferred;
 use Amp\Promise;
+use Amp\Socket\Server;
 use Ostrolucky\Stdinho\ProgressBar;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 
-class PipeBufferer implements BuffererInterface
+class PipeBufferer extends AbstractBufferer
 {
     /**
      * @var LoggerInterface
      */
     private $logger;
     /**
-     * @var ResourceInputStream
-     */
-    private $inputStream;
-    /**
-     * @var ResourceOutputStream
+     * @var OutputStream
      */
     private $outputStream;
-
+    /**
+     * @var Server
+     */
+    private $server;
     /**
      * @var Deferred
      */
     private $mimeType;
     /**
-     * @var string
-     */
-    private $filePath;
-    /**
      * @var ProgressBar
      */
     private $progressBar;
-
     /**
      * @var bool
      */
@@ -49,22 +45,34 @@ class PipeBufferer implements BuffererInterface
      * @var Deferred|null
      */
     private $deferred;
-
     /**
-     * @param resource $inputStream
+     * @var int
      */
+    private $bufferSize;
+
     public function __construct(
         LoggerInterface $logger,
-        $inputStream,
-        ?string $outputPath,
-        ConsoleSectionOutput $output
+        InputStream $inputStream,
+        OutputStream $outputStream,
+        ConsoleSectionOutput $output,
+        Server $server,
+        int $bufferSize
     ) {
         $this->logger = $logger;
-        $this->inputStream = new ResourceInputStream($inputStream);
-        $this->outputStream = new ResourceOutputStream($fOutput = $outputPath ? fopen($outputPath, 'wb') : tmpfile());
+        $this->inputStream = $inputStream;
+        $this->outputStream = $outputStream;
+        $this->server = $server;
         $this->mimeType = new Deferred();
-        $this->filePath = $outputPath ?: stream_get_meta_data($fOutput)['uri'];
         $this->progressBar = new ProgressBar($output, 0, 'buffer');
+        $this->bufferSize = $bufferSize;
+
+        $filePath = '';
+
+        if ($outputStream instanceof ResourceOutputStream) {
+            $filePath = stream_get_meta_data($outputStream->getResource())['uri'];
+        }
+
+        parent::__construct($filePath);
     }
 
     public function __invoke(): Promise
@@ -72,32 +80,37 @@ class PipeBufferer implements BuffererInterface
         $generator = function (): \Generator {
             $this->logger->debug("Saving stdin to $this->filePath");
 
-            $bytesDownloaded = 0;
             while (null !== $chunk = yield $this->inputStream->read()) {
                 yield $this->outputStream->write($chunk);
 
-                if ($bytesDownloaded === 0) {
+                if ($this->progressBar->step === 0) {
                     $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
                     $this->logger->debug(sprintf('Stdin MIME type detected: "%s"', $mimeType));
                     $this->mimeType->resolve($mimeType);
                 }
 
-                $this->progressBar->setProgress($bytesDownloaded += strlen($chunk));
+                $this->progressBar->advance(strlen($chunk));
                 $this->resolveDeferrer();
+
+                if ($this->progressBar->step < $this->bufferSize) {
+                    continue;
+                }
+
+                $this->logger->warning(
+                    'Max buffer size reached. Disabling buffering and falling back to piping stdin to socket directly. No new client connections will be accepted.'
+                );
+                $this->server->close();
+
+                break;
             }
 
             $this->buffering = false;
             $this->progressBar->finish();
-            $this->logger->debug("Stdin transfer done, $bytesDownloaded bytes downloaded");
+            $this->logger->debug("Buffering to file stopped, {$this->progressBar->step} bytes stored");
             $this->resolveDeferrer();
         };
 
         return new Coroutine($generator());
-    }
-
-    public function getFilePath(): string
-    {
-        return $this->filePath;
     }
 
     public function getMimeType(): Promise
