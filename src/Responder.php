@@ -6,6 +6,7 @@ namespace Ostrolucky\Stdinho;
 
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\StreamException;
+use Amp\Deferred;
 use Amp\Socket\Socket;
 use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
 use Psr\Log\LoggerInterface;
@@ -33,6 +34,10 @@ class Responder
      * @var InputStream
      */
     private $inputStream;
+    /**
+     * @var Deferred
+     */
+    private $defererThatIsResolvedWhenSomebodyConnects;
 
     /**
      * @param string[] $customHttpHeaders
@@ -42,13 +47,15 @@ class Responder
         AbstractBufferer $bufferer,
         ConsoleOutput $consoleOutput,
         array $customHttpHeaders,
-        InputStream $inputStream
+        InputStream $inputStream,
+        Deferred $defererThatIsResolvedWhenSomebodyConnects
     ) {
         $this->logger = $logger;
         $this->bufferer = $bufferer;
         $this->consoleOutput = $consoleOutput;
         $this->customHttpHeaders = $customHttpHeaders;
         $this->inputStream = $inputStream;
+        $this->defererThatIsResolvedWhenSomebodyConnects = $defererThatIsResolvedWhenSomebodyConnects;
     }
 
     public function __invoke(Socket $socket): \Generator
@@ -66,6 +73,10 @@ class Responder
         if (!$this->bufferer->isBuffering()) {
             $header[] = "Content-Length: {$this->bufferer->getCurrentProgress()}";
         }
+
+        // Only at this point it's safe to resolve the promise, otherwise Responder
+        // would think everything was buffered and specify wrong content length!
+        $this->defererThatIsResolvedWhenSomebodyConnects->resolve();
 
         $progressBar = new ProgressBar(
             $this->consoleOutput->section(),

@@ -6,6 +6,7 @@ namespace Ostrolucky\Stdinho\Tests;
 
 use Amp\ByteStream\InputStream;
 use Amp\Coroutine;
+use Amp\Deferred;
 use Amp\Socket\ClientSocket;
 use Amp\Success;
 use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
@@ -24,7 +25,8 @@ class ResponderTest extends TestCase
             new ResolvedBufferer(__FILE__),
             $this->createMock(ConsoleOutput::class),
             [],
-            $this->createMock(InputStream::class)
+            $this->createMock(InputStream::class),
+            new Deferred()
         );
 
         $socket = $this->getMockBuilder(ClientSocket::class)

@@ -30,6 +30,10 @@ class PipeBufferer extends AbstractBufferer
      */
     private $server;
     /**
+     * @var Promise
+     */
+    private $promiseThatIsResolvedWhenSomebodyConnects;
+    /**
      * @var Deferred
      */
     private $mimeType;
@@ -56,12 +60,14 @@ class PipeBufferer extends AbstractBufferer
         OutputStream $outputStream,
         ConsoleSectionOutput $output,
         Server $server,
+        Promise $promiseThatIsResolvedWhenSomebodyConnects,
         int $bufferSize
     ) {
         $this->logger = $logger;
         $this->inputStream = $inputStream;
         $this->outputStream = $outputStream;
         $this->server = $server;
+        $this->promiseThatIsResolvedWhenSomebodyConnects = $promiseThatIsResolvedWhenSomebodyConnects;
         $this->mimeType = new Deferred();
         $this->progressBar = new ProgressBar($output, 0, 'buffer');
         $this->bufferSize = $bufferSize;
@@ -92,13 +98,17 @@ class PipeBufferer extends AbstractBufferer
                 $this->progressBar->advance(strlen($chunk));
                 $this->resolveDeferrer();
 
+                // This happens after write in order to give bufferer a chance to detect mimeType even if bufferSize is 0
                 if ($this->progressBar->step < $this->bufferSize) {
                     continue;
                 }
 
                 $this->logger->warning(
-                    'Max buffer size reached. Disabling buffering and falling back to piping stdin to socket directly. No new client connections will be accepted.'
+                    'Max buffer size reached. Disabling buffering and falling back to piping stdin to socket directly. Only one client connection allowed.'
                 );
+
+                // Wait until at least one client connects. For first client it's safe to consume STDIN directly.
+                yield $this->promiseThatIsResolvedWhenSomebodyConnects;
                 $this->server->close();
 
                 break;

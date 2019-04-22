@@ -23,6 +23,10 @@ class FunctionalTest extends TestCase
      * @var DefaultClient
      */
     private $httpClient;
+    /**
+     * @var string
+     */
+    private $command;
 
     public static function setUpBeforeClass(): void
     {
@@ -31,21 +35,15 @@ class FunctionalTest extends TestCase
 
     protected function setUp(): void
     {
-        Loop::run(function () {
+        Loop::run(function (): void {
             $isCoverageEnabled = array_filter($_SERVER['argv'], function (string $arg) {
                 return strpos($arg, '--coverage') === 0;
             });
-            $script = $isCoverageEnabled ? 'coverage-enabling-bin-wrapper.php' : '../bin/stdinho';
-
-            $this->process = new Process('php '.__DIR__."/$script --connections-limit=1 localhost:1338");
-
-            yield $this->process->start();
+            $executable = $isCoverageEnabled ? 'coverage-enabling-bin-wrapper.php' : '../bin/stdinho';
+            $this->command = 'php '.__DIR__."/$executable --connections-limit=1 localhost:1338 ";
 
             $this->httpClient = new DefaultClient();
             $this->httpClient->setOption(DefaultClient::OP_TRANSFER_TIMEOUT, 400);
-
-            // wait till server booted and listens to connections
-            yield $this->process->getStdout()->read();
         });
     }
 
@@ -58,10 +56,14 @@ class FunctionalTest extends TestCase
 
     /**
      * Tests syncing of PipeBufferer and Responder, essentially tests commit be4421d6911888e839f3a850b650ee2c6de30b25
+     *
+     * @dataProvider cliArgumentsProvider
      */
-    public function testStdinIsWrittenToSocketASAP(): void
+    public function testStdinIsWrittenToSocketASAP(string $cliArguments): void
     {
-        Loop::run(function () {
+        Loop::run(function () use ($cliArguments) {
+            yield from $this->bootServer($cliArguments);
+
             yield $this->process->getStdin()->write('foo');
             yield new Delayed(60);
 
@@ -74,5 +76,21 @@ class FunctionalTest extends TestCase
             // should result in timeout here if not synced properly
             self::assertEquals('bar', yield $response->getBody()->read());
         });
+    }
+
+    /**
+     * @return string[][]
+     */
+    public function cliArgumentsProvider(): array
+    {
+        return [[''], ['--buffer-size=0']];
+    }
+
+    private function bootServer(string $arguments): \Generator
+    {
+        $this->process = new Process($this->command.$arguments);
+        yield $this->process->start();
+        // wait till server booted and listens to connections
+        yield $this->process->getStdout()->read();
     }
 }

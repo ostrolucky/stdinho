@@ -6,6 +6,7 @@ namespace Ostrolucky\Stdinho\Tests;
 
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\OutputStream;
+use Amp\Deferred;
 use Amp\Delayed;
 use Amp\Loop;
 use Amp\Socket\ClientSocket;
@@ -25,16 +26,16 @@ class IntegrationTest extends TestCase
 {
     public function testBufferOverflow(): void
     {
-        $buffererInputStream = $this->createMock(InputStream::class);
-        $buffererOutputStream = $this->createMock(OutputStream::class);
+        $buffererInput = $this->createMock(InputStream::class);
+        $buffererOutput = $this->createMock(OutputStream::class);
         $responderInputStream = $this->createMock(InputStream::class);
         $consoleOutput = $this->createMock(ConsoleOutput::class);
-        $sectionOutput = $this->createMock(ConsoleSectionOutput::class);
+        $section = $this->createMock(ConsoleSectionOutput::class);
         $server = $this->createMock(Server::class);
         $logger = new TestLogger();
 
-        $bufferer = new PipeBufferer($logger, $buffererInputStream, $buffererOutputStream, $sectionOutput, $server, 3);
-        $responder = new Responder($logger, $bufferer, $consoleOutput, [], $responderInputStream);
+        $bufferer = new PipeBufferer($logger, $buffererInput, $buffererOutput, $section, $server, new Success(), 3);
+        $responder = new Responder($logger, $bufferer, $consoleOutput, [], $responderInputStream, new Deferred());
 
         $socket = $this->getMockBuilder(ClientSocket::class)
             ->disableOriginalConstructor()
@@ -42,18 +43,18 @@ class IntegrationTest extends TestCase
             ->getMock()
         ;
 
-        $consoleOutput->method('section')->willReturn($sectionOutput);
-        $sectionOutput->method('getFormatter')->willReturn($this->createMock(OutputFormatterInterface::class));
+        $consoleOutput->method('section')->willReturn($section);
+        $section->method('getFormatter')->willReturn($this->createMock(OutputFormatterInterface::class));
         $socket->method('read')->willReturn(new Success(''));
 
-        $buffererInputStream->method('read')->willReturn(
+        $buffererInput->method('read')->willReturn(
             new Delayed(0, $foo = 'foo'),
             new Delayed(0, $bar = 'bar'),
             new Delayed(0, $baz = 'baz'),
             new Success()
         );
 
-        $buffererOutputStream
+        $buffererOutput
             ->expects($this->exactly(1))
             ->method('write')
             ->willReturn(new Success())

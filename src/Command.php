@@ -6,7 +6,9 @@ namespace Ostrolucky\Stdinho;
 
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
+use Amp\Deferred;
 use Amp\Loop;
+use Amp\Promise;
 use Amp\Socket\Server;
 use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
@@ -112,15 +114,16 @@ class Command extends \Symfony\Component\Console\Command\Command
         $connectionsLimit = (float)$input->getOption('connections-limit');
         $filePath = $input->getOption('file');
 
+        $newConnDefer = new Deferred();
         $server = listen($addressPort);
         $logger = new ConsoleLogger($firstSection = $output->section());
-        $bufferer = $this->createBufferer($output, $logger, $server, $filePath, $bufferSize);
+        $bufferer = $this->createBufferer($output, $logger, $server, $newConnDefer->promise(), $filePath, $bufferSize);
 
         $firstSection->writeln(
             "<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>\n"
         );
 
-        Loop::run(function () use (&$connectionsLimit, $server, $logger, $output, $bufferer) {
+        Loop::run(function () use ($newConnDefer, &$connectionsLimit, $server, $logger, $output, $bufferer) {
             asyncCoroutine($bufferer)();
 
             while ($connectionsLimit-- && ($socket = yield $server->accept())) {
@@ -129,7 +132,8 @@ class Command extends \Symfony\Component\Console\Command\Command
                     $bufferer,
                     $output,
                     $this->customHttpHeaders,
-                    new ResourceInputStream(fopen($bufferer->filePath, 'rb'))
+                    new ResourceInputStream(fopen($bufferer->filePath, 'rb')),
+                    $newConnDefer
                 );
                 asyncCoroutine($responder)($socket);
             }
@@ -142,6 +146,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         ConsoleOutput $output,
         LoggerInterface $logger,
         Server $server,
+        Promise $promiseThatIsResolvedWhenSomebodyConnects,
         ?string $filePath,
         ?string $bufferSize
     ): AbstractBufferer {
@@ -155,6 +160,7 @@ class Command extends \Symfony\Component\Console\Command\Command
             new ResourceOutputStream($filePath ? fopen($filePath, 'wb') : tmpfile()),
             $output->section(),
             $server,
+            $promiseThatIsResolvedWhenSomebodyConnects,
             (int)($bufferSize ?? disk_free_space($filePath ?: sys_get_temp_dir()) * .9)
         );
     }
