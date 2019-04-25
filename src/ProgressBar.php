@@ -8,6 +8,15 @@ use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Terminal;
 
+/**
+ * Fork of Symfony ProgressBar, necessary because of multiple problems in Symfony one, such as:
+ * - Massive performance hit due to redraw frequency being step based instead of time based, see https://github.com/symfony/symfony/pull/26339
+ * - There is no official mechanism to pass custom data to placeholders https://github.com/symfony/symfony/issues/31193.
+ *   I would have to pass dynamic props each time after initializing ProgressBar and rely on presence of these in callbacks.
+ * - Since symfony/console 4.2.3 ProgressBar does redraws with single call to output which in theory allows to write Output
+ *   throttling decorator, but in practice ProgressBar does instanceof checks for ConsoleSectionOutput, which makes this difficult.
+ *   Even if this problem is solved, there is another problem - combo of clear() and write*( calls, which need to be carefully synced.
+ */
 class ProgressBar
 {
     /**
