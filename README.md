@@ -132,13 +132,6 @@ $ curl D:1337 -o big_file.tar.gz
 
 GPLv3 license. Please see [License File](LICENSE.md) for more information.
 
-## See also
-
-
-- [inetd](https://debian-administration.org/article/371/A_web_server_in_a_shell_script) - Universal internet service daemon. Requires writing config and script for HTTP headers by hand. No buffering or live monitoring.
-- [websocketd](https://github.com/joewalnes/websocketd) If you need to serve output of a program over websockets instead of HTTP
-
-
 [ico-version]: https://img.shields.io/packagist/v/ostrolucky/stdinho.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-GPL-brightgreen.svg?style=flat-square
 [ico-circleci]: https://circleci.com/gh/ostrolucky/stdinho.svg?style=shield
