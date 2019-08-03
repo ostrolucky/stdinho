@@ -60,7 +60,7 @@ class Responder
 
     public function __invoke(Socket $socket): \Generator
     {
-        $remoteAddress = $socket->getRemoteAddress();
+        $remoteAddress = (string)$socket->getRemoteAddress();
         $this->logger->debug("Accepted connection from $remoteAddress:\n".trim(yield $socket->read()));
 
         $header = [

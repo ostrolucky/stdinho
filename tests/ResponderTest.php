@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Ostrolucky\Stdinho\Tests;
 
 use Amp\ByteStream\InputStream;
+use Amp\ByteStream\ResourceOutputStream;
 use Amp\Coroutine;
 use Amp\Deferred;
-use Amp\Socket\ClientSocket;
+use Amp\Socket\Socket;
+use Amp\Socket\SocketAddress;
 use Amp\Success;
 use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
 use Ostrolucky\Stdinho\Responder;
@@ -29,13 +31,15 @@ class ResponderTest extends TestCase
             new Deferred()
         );
 
-        $socket = $this->getMockBuilder(ClientSocket::class)
-            ->setConstructorArgs([$resource = fopen('php://memory', 'rwb')])
-            ->setMethods(['read', 'getRemoteAddress'])
-            ->getMock()
-        ;
+        $writer = new ResourceOutputStream($resource = fopen('php://memory', 'rwb'));
+        $socket = $this->createMock(Socket::class);
 
+        // TODO remove class_exists when we remove amphp/socket 0.x support (when amphp/artax supports amphp/socket 1.x)
+        $socket->method('getRemoteAddress')->willReturn(class_exists(SocketAddress::class) ? new SocketAddress(''): '');
         $socket->method('read')->willReturn(new Success(''));
+        $socket->method('write')->willReturnCallback(function(string $data) use ($writer) {
+            return $writer->write($data);
+        });
 
         fclose($resource);
 

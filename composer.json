@@ -15,7 +15,7 @@
         "ext-json": "*",
         "amphp/amp": "^2.0",
         "amphp/byte-stream": "^1.2.5",
-        "amphp/socket": "^0.10",
+        "amphp/socket": "^0.10|^1",
         "jean85/pretty-package-versions": "^1.1",
         "psr/log": "^1.1",
         "symfony/console": "^4.1@beta",
