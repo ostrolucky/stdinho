@@ -34,8 +34,7 @@ class ResponderTest extends TestCase
         $writer = new ResourceOutputStream($resource = fopen('php://memory', 'rwb'));
         $socket = $this->createMock(Socket::class);
 
-        // TODO remove class_exists when we remove amphp/socket 0.x support (when amphp/artax supports amphp/socket 1.x)
-        $socket->method('getRemoteAddress')->willReturn(class_exists(SocketAddress::class) ? new SocketAddress(''): '');
+        $socket->method('getRemoteAddress')->willReturn(new SocketAddress(''));
         $socket->method('read')->willReturn(new Success(''));
         $socket->method('write')->willReturnCallback(function(string $data) use ($writer) {
             return $writer->write($data);

@@ -9,8 +9,9 @@ use Amp\ByteStream\OutputStream;
 use Amp\Deferred;
 use Amp\Delayed;
 use Amp\Loop;
-use Amp\Socket\ClientSocket;
 use Amp\Socket\Server;
+use Amp\Socket\Socket;
+use Amp\Socket\SocketAddress;
 use Amp\Success;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
 use Ostrolucky\Stdinho\Responder;
@@ -31,21 +32,19 @@ class IntegrationTest extends TestCase
         $responderInputStream = $this->createMock(InputStream::class);
         $consoleOutput = $this->createMock(ConsoleOutput::class);
         $section = $this->createMock(ConsoleSectionOutput::class);
-        $server = $this->createMock(Server::class);
+        $resource = fopen('php://memory', 'rw');
+        $server = new Server($resource);
         $logger = new TestLogger();
 
         $bufferer = new PipeBufferer($logger, $buffererInput, $buffererOutput, $section, $server, new Success(), 3);
         $responder = new Responder($logger, $bufferer, $consoleOutput, [], $responderInputStream, new Deferred());
 
-        $socket = $this->getMockBuilder(ClientSocket::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['read', 'write', 'getRemoteAddress', 'end'])
-            ->getMock()
-        ;
+        $socket = $this->createMock(Socket::class);
 
         $consoleOutput->method('section')->willReturn($section);
         $section->method('getFormatter')->willReturn($this->createMock(OutputFormatterInterface::class));
         $socket->method('read')->willReturn(new Success(''));
+        $socket->method('getRemoteAddress')->willReturn(new SocketAddress(''));
 
         $buffererInput->method('read')->willReturn(
             new Delayed(0, $foo = 'foo'),
@@ -73,13 +72,12 @@ class IntegrationTest extends TestCase
             ->willReturn(new Success())
         ;
 
-        $server->expects($this->exactly(1))->method('close');
-
         Loop::run(function () use ($socket, $bufferer, $responder): void {
             asyncCoroutine($bufferer)();
             asyncCoroutine($responder)($socket);
         });
 
         self::assertTrue($logger->hasWarningThatContains('Max buffer size reached'));
+        self::assertFalse(is_resource($resource));
     }
 }

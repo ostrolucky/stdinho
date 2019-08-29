@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho\Tests;
 
-use Amp\Artax\DefaultClient;
-use Amp\Artax\Response;
 use Amp\Delayed;
+use Amp\Http\Client\Client;
+use Amp\Http\Client\Response;
 use Amp\Loop;
 use Amp\Process\Process;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ class FunctionalTest extends TestCase
      */
     private $process;
     /**
-     * @var DefaultClient
+     * @var Client
      */
     private $httpClient;
     /**
@@ -41,9 +41,7 @@ class FunctionalTest extends TestCase
             });
             $executable = $isCoverageEnabled ? 'coverage-enabling-bin-wrapper.php' : '../bin/stdinho';
             $this->command = 'php '.__DIR__."/$executable --connections-limit=1 localhost:1338 ";
-
-            $this->httpClient = new DefaultClient();
-            $this->httpClient->setOption(DefaultClient::OP_TRANSFER_TIMEOUT, 400);
+            $this->httpClient = new Client();
         });
     }
 
