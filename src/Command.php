@@ -74,7 +74,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         $filePath = $input->getOption('file');
         $json = $input->getOption('http-headers');
         $fileExists = $filePath && file_exists($filePath);
-        $this->hasStdin = ftell(STDIN) !== false && !stream_isatty(STDIN);
+        $this->hasStdin = !stream_isatty(STDIN);
         $this->customHttpHeaders = @json_decode($json, true);
 
         if (!is_array($this->customHttpHeaders)) {
