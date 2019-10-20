@@ -21,7 +21,7 @@ Via [Composer](https://getcomposer.org/doc/00-intro.md)
 composer global require ostrolucky/stdinho
 ```
 
-Or grab executable PHAR file from [Releases](releases/latest)
+Or grab executable PHAR file from [Releases](releases)
 
 ## Usage
 
