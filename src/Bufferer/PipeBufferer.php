@@ -89,7 +89,7 @@ class PipeBufferer extends AbstractBufferer
             while (null !== $chunk = yield $this->inputStream->read()) {
                 yield $this->outputStream->write($chunk);
 
-                if ($this->progressBar->step === 0) {
+                if ($this->progressBar->getProgress() === 0) {
                     $mimeType = (new \finfo(FILEINFO_MIME))->buffer($chunk);
                     $this->logger->debug(sprintf('Stdin MIME type detected: "%s"', $mimeType));
                     $this->mimeType->resolve($mimeType);
@@ -99,7 +99,7 @@ class PipeBufferer extends AbstractBufferer
                 $this->resolveDeferrer();
 
                 // This happens after write in order to give bufferer a chance to detect mimeType even if bufferSize is 0
-                if ($this->progressBar->step < $this->bufferSize) {
+                if ($this->progressBar->getProgress() < $this->bufferSize) {
                     continue;
                 }
 
@@ -116,7 +116,7 @@ class PipeBufferer extends AbstractBufferer
 
             $this->buffering = false;
             $this->progressBar->finish();
-            $this->logger->debug("Buffering to file stopped, {$this->progressBar->step} bytes stored");
+            $this->logger->debug("Buffering to file stopped, {$this->progressBar->getProgress()} bytes stored");
             $this->resolveDeferrer();
         };
 
@@ -140,7 +140,7 @@ class PipeBufferer extends AbstractBufferer
 
     public function getCurrentProgress(): int
     {
-        return $this->progressBar->step;
+        return $this->progressBar->getProgress();
     }
 
     private function resolveDeferrer(): void

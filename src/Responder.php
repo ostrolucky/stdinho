@@ -116,7 +116,7 @@ class Responder
              * @see https://github.com/ostrolucky/stdinho/pull/2
              * @see https://github.com/amphp/byte-stream/issues/47
              */
-            if ($buffererProgress <= $progressBar->step && $this->bufferer->isBuffering()) {
+            if ($buffererProgress <= $progressBar->getProgress() && $this->bufferer->isBuffering()) {
                 yield $this->bufferer->waitForWrite();
 
                 continue;
@@ -125,7 +125,7 @@ class Responder
             if (null !== $chunk = yield $this->inputStream->read()) {
                 yield $socket->write($chunk);
 
-                $progressBar->max = $this->bufferer->getCurrentProgress();
+                $progressBar->setMaxSteps($this->bufferer->getCurrentProgress());
                 $progressBar->advance(strlen($chunk));
 
                 continue;
