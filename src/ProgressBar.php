@@ -48,10 +48,6 @@ class ProgressBar
      */
     private $startTime;
     /**
-     * @var float
-     */
-    private $percent = 0.0;
-    /**
      * @var Terminal
      */
     private $terminal;
@@ -82,7 +78,7 @@ class ProgressBar
                 return str_pad($bar->step, strlen($bar->max), ' ', STR_PAD_LEFT);
             },
             'percent' => function (self $bar) {
-                return floor($bar->percent * 100);
+                return $bar->max ? floor($bar->step / $bar->max * 100) : 0;
             },
             'current_volume' => function (self $bar) {
                 return Helper::formatMemory($bar->step);
@@ -112,7 +108,6 @@ class ProgressBar
     public function advance(int $step): void
     {
         $this->step += $step;
-        $this->percent = $this->max ? (float)$step / $this->max : 0;
 
         if (microtime(true) - $this->lastWriteTime < ($this->output->isDecorated() ? .1 : 1)) {
             return;

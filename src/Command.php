@@ -85,6 +85,8 @@ class Command extends \Symfony\Component\Console\Command\Command
 
         if ($this->hasStdin) {
             if ($fileExists) {
+                // both stdin and existing file path provided, so we can't deterministically decide user wants to overwrite file
+                // they might want to overwrite file, or they might want to read from it - no way to know
                 throw new LogicException(
                     sprintf('File "%s" exists! If you want to overwrite it, please remove it beforehand.', $filePath)
                 );
