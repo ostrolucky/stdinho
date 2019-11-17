@@ -24,24 +24,19 @@ jobs:
     executor: php71
     steps: &steps
       - checkout
-      - composer
-      - run: vendor/bin/phpunit
+      - composer:
+          extra: $COMPOSER_EXTRA
+      - run: vendor/bin/phpunit --log-junit=/tmp/test_results/phpunit/test_result.xml
+      - store_test_results:
+          path: /tmp/test_results
   test_latest_php:
     executor: php
     steps: *steps
   test_lowest:
     executor: php71
-    steps:
-      - checkout
-      - restore_cache:
-          key: composer-{{ checksum "composer.json" }}
-      - composer:
-          extra: --prefer-lowest
-      - save_cache:
-          key: composer-{{ checksum "composer.json" }}
-          paths:
-            - vendor
-      - run: vendor/bin/phpunit
+    environment:
+      COMPOSER_EXTRA: --prefer-lowest
+    steps: *steps
 
 workflows:
   version: 2
