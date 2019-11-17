@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Ostrolucky\Stdinho\Tests;
 
 use Amp\Delayed;
-use Amp\Http\Client\Client;
+use Amp\Http\Client\HttpClient;
+use Amp\Http\Client\HttpClientBuilder;
+use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
 use Amp\Loop;
 use Amp\Process\Process;
@@ -20,7 +22,7 @@ class FunctionalTest extends TestCase
      */
     private $process;
     /**
-     * @var Client
+     * @var HttpClient
      */
     private $httpClient;
     /**
@@ -41,7 +43,7 @@ class FunctionalTest extends TestCase
             });
             $executable = $isCoverageEnabled ? 'coverage-enabling-bin-wrapper.php' : '../bin/stdinho';
             $this->command = 'php '.__DIR__."/$executable --connections-limit=1 localhost:1338 ";
-            $this->httpClient = new Client();
+            $this->httpClient = HttpClientBuilder::buildDefault();
         });
     }
 
@@ -66,7 +68,7 @@ class FunctionalTest extends TestCase
             yield new Delayed(60);
 
             /** @var Response $response */
-            $response = yield $this->httpClient->request('http://localhost:1338');
+            $response = yield $this->httpClient->request(new Request('http://localhost:1338'));
             self::assertEquals('foo', yield $response->getBody()->read()); // drain the buffer
 
             yield $this->process->getStdin()->write('bar');

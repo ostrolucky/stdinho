@@ -29,7 +29,7 @@ SymfonyProgressBar::setPlaceholderFormatterDefinition('max_volume', function (Sy
     return Helper::formatMemory($bar->getMaxSteps());
 });
 SymfonyProgressBar::setPlaceholderFormatterDefinition('host', function (SymfonyProgressBar $bar) {
-    return Helper::formatMemory($bar->host);
+    return $bar->host;
 });
 
 class ProgressBar
