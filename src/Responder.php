@@ -97,6 +97,7 @@ class Responder
             $this->logger->debug("$remoteAddress finished download");
         } catch (StreamException $exception) {
             $this->logger->debug("$remoteAddress aborted download");
+            $progressBar->abort();
         }
 
         $socket->end();

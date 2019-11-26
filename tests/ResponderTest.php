@@ -15,7 +15,9 @@ use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
 use Ostrolucky\Stdinho\Responder;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\Test\TestLogger;
+use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use function Amp\Promise\wait;
 
 class ResponderTest extends TestCase
@@ -25,12 +27,14 @@ class ResponderTest extends TestCase
         $responder = new Responder(
             $logger = new TestLogger(),
             new ResolvedBufferer(__FILE__),
-            $this->createMock(ConsoleOutput::class),
+            $output = $this->createMock(ConsoleOutput::class),
             [],
             $this->createMock(InputStream::class),
             new Deferred()
         );
 
+        $output->method('section')->willReturn($sectionOutput = $this->createMock(ConsoleSectionOutput::class));
+        $sectionOutput->method('getFormatter')->willReturn($this->createMock(OutputFormatterInterface::class));
         $writer = new ResourceOutputStream($resource = fopen('php://memory', 'rwb'));
         $socket = $this->createMock(Socket::class);
 

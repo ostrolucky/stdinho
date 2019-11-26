@@ -14,7 +14,7 @@ SymfonyProgressBar::setFormatDefinition(
 );
 SymfonyProgressBar::setFormatDefinition(
     'portal',
-    '[%host%] Downloaded: %current_volume% | %speed% | %elapsed%/%estimated% | %percent%%'
+    '[%host%] Downloaded: %current_volume% | %speed% | %elapsed%/%estimated% |%aborted% %percent%%'
 );
 SymfonyProgressBar::setPlaceholderFormatterDefinition('current_volume', function (SymfonyProgressBar $bar) {
     return Helper::formatMemory($bar->getProgress());
@@ -30,6 +30,9 @@ SymfonyProgressBar::setPlaceholderFormatterDefinition('max_volume', function (Sy
 });
 SymfonyProgressBar::setPlaceholderFormatterDefinition('host', function (SymfonyProgressBar $bar) {
     return $bar->host;
+});
+SymfonyProgressBar::setPlaceholderFormatterDefinition('aborted', function (SymfonyProgressBar $bar) {
+    return empty($bar->aborted) ? '' : ' aborted at';
 });
 
 class ProgressBar
@@ -64,5 +67,11 @@ class ProgressBar
     public function finish(): void
     {
         $this->wrappedProgressBar->finish();
+    }
+
+    public function abort(): void
+    {
+        $this->wrappedProgressBar->aborted = true;
+        $this->wrappedProgressBar->display();
     }
 }
