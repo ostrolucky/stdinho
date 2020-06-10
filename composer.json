@@ -18,16 +18,16 @@
         "amphp/socket": "^1",
         "jean85/pretty-package-versions": "^1.1",
         "psr/log": "^1.1",
-        "symfony/console": "^4.1@beta|^5.0",
+        "symfony/console": ">=4.1",
         "symfony/polyfill-php72": "^1.7"
     },
     "require-dev": {
         "amphp/http-client": "^4.0.0-rc7",
         "amphp/parallel": "^1.0.1",
         "amphp/process": "^1.0.3",
-        "phpunit/php-code-coverage": "^6.1|^7.0",
-        "phpunit/phpcov": "^5.0|^6.0",
-        "phpunit/phpunit": "^7.5|^8.0"
+        "phpunit/php-code-coverage": ">=6.1",
+        "phpunit/phpcov": ">=5.0",
+        "phpunit/phpunit": ">=7.5"
     },
     "config": {
         "sort-packages": true

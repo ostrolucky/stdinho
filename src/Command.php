@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho;
 
+use function Amp\asyncCoroutine;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Deferred;
 use Amp\Loop;
 use Amp\Promise;
+use function Amp\Socket\listen;
 use Amp\Socket\Server;
 use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
@@ -21,8 +23,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use function Amp\asyncCoroutine;
-use function Amp\Socket\listen;
 
 class Command extends \Symfony\Component\Console\Command\Command
 {
@@ -125,7 +125,7 @@ class Command extends \Symfony\Component\Console\Command\Command
             "<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>\n"
         );
 
-        Loop::run(function () use ($newConnDefer, &$connectionsLimit, $server, $logger, $output, $bufferer) {
+        Loop::run(function() use ($newConnDefer, &$connectionsLimit, $server, $logger, $output, $bufferer) {
             asyncCoroutine($bufferer)();
 
             while ($connectionsLimit-- && ($socket = yield $server->accept())) {

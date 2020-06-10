@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho\Tests;
 
+use function Amp\asyncCoroutine;
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\OutputStream;
 use Amp\Deferred;
@@ -21,7 +22,6 @@ use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
-use function Amp\asyncCoroutine;
 
 class IntegrationTest extends TestCase
 {
@@ -32,6 +32,7 @@ class IntegrationTest extends TestCase
         $responderInputStream = $this->createMock(InputStream::class);
         $consoleOutput = $this->createMock(ConsoleOutput::class);
         $section = $this->createMock(ConsoleSectionOutput::class);
+        $outputFormatter = $this->createMock(OutputFormatterInterface::class);
         $resource = fopen('php://memory', 'rw');
         $server = new Server($resource);
         $logger = new TestLogger();
@@ -42,7 +43,8 @@ class IntegrationTest extends TestCase
         $socket = $this->createMock(Socket::class);
 
         $consoleOutput->method('section')->willReturn($section);
-        $section->method('getFormatter')->willReturn($this->createMock(OutputFormatterInterface::class));
+        $outputFormatter->method('isDecorated')->willReturn(false);
+        $section->method('getFormatter')->willReturn($outputFormatter);
         $socket->method('read')->willReturn(new Success(''));
         $socket->method('getRemoteAddress')->willReturn(new SocketAddress(''));
 
@@ -54,30 +56,30 @@ class IntegrationTest extends TestCase
         );
 
         $buffererOutput
-            ->expects($this->exactly(1))
+            ->expects(static::exactly(1))
             ->method('write')
             ->willReturn(new Success())
         ;
 
         $responderInputStream
-            ->expects($this->exactly(2))
+            ->expects(static::exactly(2))
             ->method('read')
             ->willReturn(new Success($foo), new Success())
         ;
 
         $socket
-            ->expects($this->exactly(4))
+            ->expects(static::exactly(4))
             ->method('write')
             ->withConsecutive([Assert::stringContains('HTTP/1.1 200 OK')], [$foo], [$bar], [$baz])
             ->willReturn(new Success())
         ;
 
-        Loop::run(function () use ($socket, $bufferer, $responder): void {
+        Loop::run(function() use ($socket, $bufferer, $responder): void {
             asyncCoroutine($bufferer)();
             asyncCoroutine($responder)($socket);
         });
 
-        self::assertTrue($logger->hasWarningThatContains('Max buffer size reached'));
-        self::assertFalse(is_resource($resource));
+        static::assertTrue($logger->hasWarningThatContains('Max buffer size reached'));
+        static::assertFalse(is_resource($resource));
     }
 }

@@ -11,9 +11,9 @@ use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
 use Amp\Loop;
 use Amp\Process\Process;
-use PHPUnit\Framework\TestCase;
 use function Amp\Promise\timeout;
 use function Amp\Promise\wait;
+use PHPUnit\Framework\TestCase;
 
 class FunctionalTest extends TestCase
 {
@@ -37,12 +37,12 @@ class FunctionalTest extends TestCase
 
     protected function setUp(): void
     {
-        Loop::run(function (): void {
-            $isCoverageEnabled = array_filter($_SERVER['argv'], function (string $arg) {
+        Loop::run(function(): void {
+            $isCoverageEnabled = array_filter($_SERVER['argv'], function(string $arg) {
                 return strpos($arg, '--coverage') === 0;
             });
             $executable = $isCoverageEnabled ? 'coverage-enabling-bin-wrapper.php' : '../bin/stdinho';
-            $this->command = 'php '.__DIR__."/$executable --connections-limit=1 localhost:1338 ";
+            $this->command = "php '".__DIR__."/$executable' --connections-limit=1 localhost:1338 ";
             $this->httpClient = HttpClientBuilder::buildDefault();
         });
     }
@@ -61,7 +61,7 @@ class FunctionalTest extends TestCase
      */
     public function testStdinIsWrittenToSocketASAP(string $cliArguments): void
     {
-        Loop::run(function () use ($cliArguments) {
+        Loop::run(function() use ($cliArguments) {
             yield from $this->bootServer($cliArguments);
 
             yield $this->process->getStdin()->write('foo');

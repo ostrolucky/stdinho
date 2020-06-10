@@ -14,7 +14,7 @@ abstract class AbstractBufferer
      */
     public $filePath;
     /**
-     * @var InputStream|null
+     * @var null|InputStream
      */
     public $inputStream;
 

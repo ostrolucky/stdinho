@@ -16,22 +16,22 @@ SymfonyProgressBar::setFormatDefinition(
     'portal',
     '[%host%] Downloaded: %current_volume% | %speed% | %elapsed%/%estimated% |%aborted% %percent%%'
 );
-SymfonyProgressBar::setPlaceholderFormatterDefinition('current_volume', function (SymfonyProgressBar $bar) {
+SymfonyProgressBar::setPlaceholderFormatterDefinition('current_volume', function(SymfonyProgressBar $bar) {
     return Helper::formatMemory($bar->getProgress());
 });
-SymfonyProgressBar::setPlaceholderFormatterDefinition('elapsed_label', function (SymfonyProgressBar $bar) {
+SymfonyProgressBar::setPlaceholderFormatterDefinition('elapsed_label', function(SymfonyProgressBar $bar) {
     return $bar->getMaxSteps() >= $bar->getProgress() ? '<info>Finished</info> in' : 'Elapsed';
 });
-SymfonyProgressBar::setPlaceholderFormatterDefinition('speed', function (SymfonyProgressBar $bar) {
+SymfonyProgressBar::setPlaceholderFormatterDefinition('speed', function(SymfonyProgressBar $bar) {
     return Helper::formatMemory($bar->getProgress() / max(1, time() - $bar->getStartTime())).'/s';
 });
-SymfonyProgressBar::setPlaceholderFormatterDefinition('max_volume', function (SymfonyProgressBar $bar) {
+SymfonyProgressBar::setPlaceholderFormatterDefinition('max_volume', function(SymfonyProgressBar $bar) {
     return Helper::formatMemory($bar->getMaxSteps());
 });
-SymfonyProgressBar::setPlaceholderFormatterDefinition('host', function (SymfonyProgressBar $bar) {
+SymfonyProgressBar::setPlaceholderFormatterDefinition('host', function(SymfonyProgressBar $bar) {
     return $bar->host;
 });
-SymfonyProgressBar::setPlaceholderFormatterDefinition('aborted', function (SymfonyProgressBar $bar) {
+SymfonyProgressBar::setPlaceholderFormatterDefinition('aborted', function(SymfonyProgressBar $bar) {
     return empty($bar->aborted) ? '' : ' aborted at';
 });
 

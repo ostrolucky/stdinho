@@ -8,6 +8,7 @@ use Amp\ByteStream\InputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Coroutine;
 use Amp\Deferred;
+use function Amp\Promise\wait;
 use Amp\Socket\Socket;
 use Amp\Socket\SocketAddress;
 use Amp\Success;
@@ -18,7 +19,6 @@ use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
-use function Amp\Promise\wait;
 
 class ResponderTest extends TestCase
 {
@@ -32,9 +32,11 @@ class ResponderTest extends TestCase
             $this->createMock(InputStream::class),
             new Deferred()
         );
+        $outputFormatter = $this->createMock(OutputFormatterInterface::class);
+        $outputFormatter->method('isDecorated')->willReturn(false);
 
         $output->method('section')->willReturn($sectionOutput = $this->createMock(ConsoleSectionOutput::class));
-        $sectionOutput->method('getFormatter')->willReturn($this->createMock(OutputFormatterInterface::class));
+        $sectionOutput->method('getFormatter')->willReturn($outputFormatter);
         $writer = new ResourceOutputStream($resource = fopen('php://memory', 'rwb'));
         $socket = $this->createMock(Socket::class);
 
@@ -48,6 +50,6 @@ class ResponderTest extends TestCase
 
         wait(new Coroutine($responder->__invoke($socket)));
 
-        self::assertTrue($logger->hasDebugThatContains('aborted download'));
+        static::assertTrue($logger->hasDebugThatContains('aborted download'));
     }
 }

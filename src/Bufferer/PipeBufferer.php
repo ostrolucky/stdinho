@@ -46,7 +46,7 @@ class PipeBufferer extends AbstractBufferer
      */
     private $buffering = true;
     /**
-     * @var Deferred|null
+     * @var null|Deferred
      */
     private $deferred;
     /**
@@ -83,7 +83,7 @@ class PipeBufferer extends AbstractBufferer
 
     public function __invoke(): Promise
     {
-        $generator = function (): \Generator {
+        $generator = function(): \Generator {
             $this->logger->debug("Saving stdin to $this->filePath");
 
             while (null !== $chunk = yield $this->inputStream->read()) {
