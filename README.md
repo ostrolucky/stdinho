@@ -2,8 +2,7 @@
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
-[![Build Status][ico-circleci]][link-circleci]
-[![Coverage Status][ico-scrutinizer]][link-scrutinizer]
+[![Build Status][ico-build]][link-build]
 
 
 `stdinho` is small command-line tool that creates TCP server, accepts any STDOUT as its STDIN and whoever connects to the server will get this data served as HTTP response.
@@ -134,9 +133,7 @@ GPLv3 license. Please see [License File](LICENSE.md) for more information.
 
 [ico-version]: https://img.shields.io/packagist/v/ostrolucky/stdinho.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-GPL-brightgreen.svg?style=flat-square
-[ico-circleci]: https://circleci.com/gh/ostrolucky/stdinho.svg?style=shield
-[ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/ostrolucky/stdinho.svg?style=flat-square
+[ico-build]: https://github.com/ostrolucky/stdinho/actions/workflows/continuous-integration.yml/badge.svg
 
 [link-packagist]: https://packagist.org/packages/ostrolucky/stdinho
-[link-circleci]: https://circleci.com/gh/ostrolucky/stdinho
-[link-scrutinizer]: https://scrutinizer-ci.com/g/ostrolucky/stdinho/code-structure
+[link-build]: https://github.com/ostrolucky/stdinho/actions/workflows/continuous-integration.yml
