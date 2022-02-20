@@ -43,7 +43,7 @@ stdinho --help
 * detects MIME type and attaches it to HTTP response
 * neat progress bar showing status of buffering and client downloads.
 
-## Recipes
+## Examples
 <details><summary>Video streaming</summary>
 <p>
 
