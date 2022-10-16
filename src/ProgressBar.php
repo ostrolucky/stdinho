@@ -37,10 +37,7 @@ SymfonyProgressBar::setPlaceholderFormatterDefinition('aborted', function(Symfon
 
 class ProgressBar
 {
-    /**
-     * @var SymfonyProgressBar
-     */
-    private $wrappedProgressBar;
+    private SymfonyProgressBar $wrappedProgressBar;
 
     public function __construct(ConsoleSectionOutput $output, int $max, string $format, ?string $host = null)
     {

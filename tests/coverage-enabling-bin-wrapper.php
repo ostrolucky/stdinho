@@ -3,16 +3,17 @@
 declare(strict_types=1);
 
 use SebastianBergmann\CodeCoverage\CodeCoverage;
+use SebastianBergmann\CodeCoverage\Driver\Selector;
+use SebastianBergmann\CodeCoverage\Filter;
 use SebastianBergmann\CodeCoverage\Report\PHP;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-$coverage = new CodeCoverage();
+$filter = new Filter();
+$filter->includeDirectory(__DIR__.'/../src');
+$filter->includeFile(__DIR__.'/../bin/stdinho');
 
-$filter = $coverage->filter();
-$filter->addDirectoryToWhitelist(__DIR__.'/../src');
-$filter->addFileToWhitelist(__DIR__.'/../bin/stdinho');
-
+$coverage = new CodeCoverage((new Selector())->forLineAndPathCoverage($filter), $filter);
 $coverage->start('process');
 include_once __DIR__.'/../bin/stdinho';
 $coverage->stop();

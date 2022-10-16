@@ -10,22 +10,23 @@
         }
     ],
     "require": {
-        "php": ">=7.1",
+        "php": ">=8.0",
         "ext-fileinfo": "*",
         "ext-json": "*",
         "amphp/amp": "^2.0",
         "amphp/byte-stream": "^1.2.5",
         "amphp/socket": "^1",
-        "jean85/pretty-package-versions": "^1.1 || ^2.0",
-        "psr/log": "^1.1",
+        "jean85/pretty-package-versions": "^2.0",
+        "psr/log": ">=2.0",
         "symfony/console": ">=4.1",
         "symfony/polyfill-php72": "^1.7"
     },
     "require-dev": {
-        "amphp/http-client": "^4.0.0-rc7",
+        "amphp/dns": "^1",
+        "amphp/http-client": "^4",
         "amphp/parallel": "^1.0.1",
         "amphp/process": "^1.0.3",
-        "phpunit/php-code-coverage": ">=6.1",
+        "phpunit/php-code-coverage": ">=9.0",
         "phpunit/phpcov": ">=5.0",
         "phpunit/phpunit": ">=7.5"
     },
@@ -35,6 +36,11 @@
     "autoload": {
         "psr-4": {
             "Ostrolucky\\Stdinho\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ostrolucky\\Stdinho\\Tests\\": "tests"
         }
     },
     "bin": [

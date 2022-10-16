@@ -9,18 +9,10 @@ use Amp\Promise;
 
 abstract class AbstractBufferer
 {
-    /**
-     * @var string
-     */
-    public $filePath;
-    /**
-     * @var null|InputStream
-     */
-    public $inputStream;
+    public ?InputStream $inputStream = null;
 
-    public function __construct(string $filePath)
+    public function __construct(public string $filePath)
     {
-        $this->filePath = $filePath;
     }
 
     abstract public function __invoke(): Promise;

@@ -17,60 +17,23 @@ use Symfony\Component\Console\Output\ConsoleSectionOutput;
 
 class PipeBufferer extends AbstractBufferer
 {
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-    /**
-     * @var OutputStream
-     */
-    private $outputStream;
-    /**
-     * @var Server
-     */
-    private $server;
-    /**
-     * @var Promise
-     */
-    private $promiseThatIsResolvedWhenSomebodyConnects;
-    /**
-     * @var Deferred
-     */
-    private $mimeType;
-    /**
-     * @var ProgressBar
-     */
-    private $progressBar;
-    /**
-     * @var bool
-     */
-    private $buffering = true;
-    /**
-     * @var null|Deferred
-     */
-    private $deferred;
-    /**
-     * @var int
-     */
-    private $bufferSize;
+    private Deferred $mimeType;
+    private ProgressBar $progressBar;
+    private bool $buffering = true;
+    private ?Deferred $deferred = null;
 
     public function __construct(
-        LoggerInterface $logger,
         InputStream $inputStream,
-        OutputStream $outputStream,
         ConsoleSectionOutput $output,
-        Server $server,
-        Promise $promiseThatIsResolvedWhenSomebodyConnects,
-        int $bufferSize
+        private LoggerInterface $logger,
+        private OutputStream $outputStream,
+        private Server $server,
+        private Promise $promiseThatIsResolvedWhenSomebodyConnects,
+        private int $bufferSize,
     ) {
-        $this->logger = $logger;
         $this->inputStream = $inputStream;
-        $this->outputStream = $outputStream;
-        $this->server = $server;
-        $this->promiseThatIsResolvedWhenSomebodyConnects = $promiseThatIsResolvedWhenSomebodyConnects;
         $this->mimeType = new Deferred();
         $this->progressBar = new ProgressBar($output, 0, 'buffer');
-        $this->bufferSize = $bufferSize;
 
         $filePath = '';
 
