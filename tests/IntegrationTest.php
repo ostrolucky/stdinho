@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho\Tests;
 
+use Psr\Log\LoggerInterface;
 use function Amp\asyncCoroutine;
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\OutputStream;
@@ -18,7 +19,6 @@ use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
 use Ostrolucky\Stdinho\Responder;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
@@ -35,15 +35,16 @@ class IntegrationTest extends TestCase
         $outputFormatter = $this->createMock(OutputFormatterInterface::class);
         $resource = fopen('php://memory', 'rw');
         $server = new Server($resource);
-        $logger = new TestLogger();
+        $logger = $this->createMock(LoggerInterface::class);
 
-        $bufferer = new PipeBufferer($logger, $buffererInput, $buffererOutput, $section, $server, new Success(), 3);
+        $bufferer = new PipeBufferer($buffererInput, $section, $logger, $buffererOutput, $server, new Success(), 3);
         $responder = new Responder($logger, $bufferer, $consoleOutput, [], $responderInputStream, new Deferred());
 
         $socket = $this->createMock(Socket::class);
 
         $consoleOutput->method('section')->willReturn($section);
         $outputFormatter->method('isDecorated')->willReturn(false);
+        $outputFormatter->method('format')->willReturn('');
         $section->method('getFormatter')->willReturn($outputFormatter);
         $socket->method('read')->willReturn(new Success(''));
         $socket->method('getRemoteAddress')->willReturn(new SocketAddress(''));
@@ -74,12 +75,13 @@ class IntegrationTest extends TestCase
             ->willReturn(new Success())
         ;
 
+        $logger->expects(self::once())->method('warning')->with(self::stringStartsWith('Max buffer size reached'));
+
         Loop::run(function() use ($socket, $bufferer, $responder): void {
             asyncCoroutine($bufferer)();
             asyncCoroutine($responder)($socket);
         });
 
-        static::assertTrue($logger->hasWarningThatContains('Max buffer size reached'));
         static::assertFalse(is_resource($resource));
     }
 }

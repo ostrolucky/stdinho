@@ -9,14 +9,8 @@ use Amp\Success;
 
 class ResolvedBufferer extends AbstractBufferer
 {
-    /**
-     * @var int
-     */
-    private $filesize;
-    /**
-     * @var string
-     */
-    private $mimeType;
+    private int $filesize;
+    private string $mimeType;
 
     public function __construct(string $filePath)
     {

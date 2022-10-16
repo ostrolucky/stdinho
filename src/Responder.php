@@ -16,47 +16,16 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 class Responder
 {
     /**
-     * @var LoggerInterface
-     */
-    private $logger;
-    /**
-     * @var AbstractBufferer
-     */
-    private $bufferer;
-    /**
-     * @var ConsoleOutput
-     */
-    private $consoleOutput;
-    /**
-     * @var string[]
-     */
-    private $customHttpHeaders = [];
-    /**
-     * @var InputStream
-     */
-    private $inputStream;
-    /**
-     * @var Deferred
-     */
-    private $defererThatIsResolvedWhenSomebodyConnects;
-
-    /**
      * @param string[] $customHttpHeaders
      */
     public function __construct(
-        LoggerInterface $logger,
-        AbstractBufferer $bufferer,
-        ConsoleOutput $consoleOutput,
-        array $customHttpHeaders,
-        InputStream $inputStream,
-        Deferred $defererThatIsResolvedWhenSomebodyConnects
+        private LoggerInterface $logger,
+        private AbstractBufferer $bufferer,
+        private ConsoleOutput $consoleOutput,
+        private array $customHttpHeaders,
+        private InputStream $inputStream,
+        private Deferred $defererThatIsResolvedWhenSomebodyConnects
     ) {
-        $this->logger = $logger;
-        $this->bufferer = $bufferer;
-        $this->consoleOutput = $consoleOutput;
-        $this->customHttpHeaders = $customHttpHeaders;
-        $this->inputStream = $inputStream;
-        $this->defererThatIsResolvedWhenSomebodyConnects = $defererThatIsResolvedWhenSomebodyConnects;
     }
 
     public function __invoke(Socket $socket): \Generator

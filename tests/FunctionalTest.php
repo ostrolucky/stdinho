@@ -38,9 +38,7 @@ class FunctionalTest extends TestCase
     protected function setUp(): void
     {
         Loop::run(function(): void {
-            $isCoverageEnabled = array_filter($_SERVER['argv'], function(string $arg) {
-                return strpos($arg, '--coverage') === 0;
-            });
+            $isCoverageEnabled = array_filter($_SERVER['argv'], fn(string $arg) => str_starts_with($arg, '--coverage'));
             $executable = $isCoverageEnabled ? 'coverage-enabling-bin-wrapper.php' : '../bin/stdinho';
             $this->command = "php '".__DIR__."/$executable' --connections-limit=1 localhost:1338 ";
             $this->httpClient = HttpClientBuilder::buildDefault();
