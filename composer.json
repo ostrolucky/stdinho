@@ -18,8 +18,7 @@
         "amphp/socket": "^1",
         "jean85/pretty-package-versions": "^2.0",
         "psr/log": ">=2.0",
-        "symfony/console": ">=4.1",
-        "symfony/polyfill-php72": "^1.7"
+        "symfony/console": ">=4.1"
     },
     "require-dev": {
         "amphp/dns": "^1",
