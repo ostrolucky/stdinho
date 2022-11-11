@@ -8,14 +8,6 @@ use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Helper\ProgressBar as SymfonyProgressBar;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 
-SymfonyProgressBar::setFormatDefinition(
-    'buffer',
-    '[Stdin] Buffered: %current_volume% | %speed% | %elapsed_label%: %elapsed%'
-);
-SymfonyProgressBar::setFormatDefinition(
-    'portal',
-    '[%host%] Downloaded: %current_volume% | %speed% | %elapsed%/%estimated% |%aborted% %percent%%'
-);
 SymfonyProgressBar::setPlaceholderFormatterDefinition('current_volume', function(SymfonyProgressBar $bar) {
     return Helper::formatMemory($bar->getProgress());
 });
@@ -28,22 +20,20 @@ SymfonyProgressBar::setPlaceholderFormatterDefinition('speed', function(SymfonyP
 SymfonyProgressBar::setPlaceholderFormatterDefinition('max_volume', function(SymfonyProgressBar $bar) {
     return Helper::formatMemory($bar->getMaxSteps());
 });
-SymfonyProgressBar::setPlaceholderFormatterDefinition('host', function(SymfonyProgressBar $bar) {
-    return $bar->host;
-});
-SymfonyProgressBar::setPlaceholderFormatterDefinition('aborted', function(SymfonyProgressBar $bar) {
-    return empty($bar->aborted) ? '' : ' aborted at';
-});
 
 class ProgressBar
 {
     private SymfonyProgressBar $wrappedProgressBar;
+    private bool $aborted = false;
 
-    public function __construct(ConsoleSectionOutput $output, int $max, string $format, ?string $host = null)
+    public function __construct(
+        ConsoleSectionOutput $output,
+        int $max,
+        private string $format,
+        private ?string $host = null)
     {
         $this->wrappedProgressBar = new SymfonyProgressBar($output, $max);
-        $this->wrappedProgressBar->setFormat($format);
-        $this->wrappedProgressBar->host = $host;
+        $this->updateFormat();
     }
 
     public function getProgress(): int
@@ -68,7 +58,16 @@ class ProgressBar
 
     public function abort(): void
     {
-        $this->wrappedProgressBar->aborted = true;
+        $this->aborted = true;
+        $this->updateFormat();
         $this->wrappedProgressBar->display();
+    }
+
+    private function updateFormat(): void
+    {
+        $this->wrappedProgressBar->setFormat(match($this->format) {
+            'buffer' => '[Stdin] Buffered: %current_volume% | %speed% | %elapsed_label%: %elapsed%',
+            'portal' => '[' . $this->host . '] Downloaded: %current_volume% | %speed% | %elapsed%/%estimated% |' . ($this->aborted ? ' aborted at' : '') . ' %percent%%',
+        });
     }
 }
