@@ -23,7 +23,7 @@ SymfonyProgressBar::setPlaceholderFormatterDefinition('elapsed_label', function(
     return $bar->getMaxSteps() >= $bar->getProgress() ? '<info>Finished</info> in' : 'Elapsed';
 });
 SymfonyProgressBar::setPlaceholderFormatterDefinition('speed', function(SymfonyProgressBar $bar) {
-    return Helper::formatMemory($bar->getProgress() / max(1, time() - $bar->getStartTime())).'/s';
+    return Helper::formatMemory((int)($bar->getProgress() / max(1, time() - $bar->getStartTime()))).'/s';
 });
 SymfonyProgressBar::setPlaceholderFormatterDefinition('max_volume', function(SymfonyProgressBar $bar) {
     return Helper::formatMemory($bar->getMaxSteps());
@@ -42,7 +42,7 @@ class ProgressBar
      */
     private $wrappedProgressBar;
 
-    public function __construct(ConsoleSectionOutput $output, int $max, string $format, string $host = null)
+    public function __construct(ConsoleSectionOutput $output, int $max, string $format, ?string $host = null)
     {
         $this->wrappedProgressBar = new SymfonyProgressBar($output, $max);
         $this->wrappedProgressBar->setFormat($format);
