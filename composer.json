@@ -1,8 +1,8 @@
 {
     "name": "ostrolucky/stdinho",
-    "type": "project",
     "description": "Turn any STDIN/STDOUT into HTTP server",
     "license": "GPL-3.0",
+    "type": "project",
     "authors": [
         {
             "name": "Gabriel Ostrolucký",
@@ -10,28 +10,25 @@
         }
     ],
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.1",
         "ext-fileinfo": "*",
         "ext-json": "*",
-        "amphp/amp": "^2.0",
-        "amphp/byte-stream": "^1.2.5",
-        "amphp/socket": "^1",
+        "amphp/amp": "^3",
+        "amphp/byte-stream": "^2",
+        "amphp/socket": "^2",
         "jean85/pretty-package-versions": "^2.0",
         "psr/log": ">=2.0",
         "symfony/console": ">=4.1"
     },
     "require-dev": {
-        "amphp/dns": "^1",
-        "amphp/http-client": "^4",
-        "amphp/parallel": "^1.0.1",
-        "amphp/process": "^1.0.3",
+        "amphp/dns": "^2",
+        "amphp/http-client": "^v5.0.0-beta.8",
+        "amphp/process": "^2",
         "phpunit/php-code-coverage": ">=9.0",
         "phpunit/phpcov": ">=5.0",
         "phpunit/phpunit": ">=7.5"
     },
-    "config": {
-        "sort-packages": true
-    },
+    "minimum-stability": "beta",
     "autoload": {
         "psr-4": {
             "Ostrolucky\\Stdinho\\": "src"
@@ -44,5 +41,8 @@
     },
     "bin": [
         "bin/stdinho"
-    ]
+    ],
+    "config": {
+        "sort-packages": true
+    }
 }

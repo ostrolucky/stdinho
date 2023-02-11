@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho;
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
-use Amp\Deferred;
-use Amp\Loop;
-use Amp\Promise;
-use Amp\Socket\Server;
+use Amp\ByteStream\ReadableResourceStream;
+use Amp\ByteStream\WritableResourceStream;
+use Amp\DeferredFuture;
+use Amp\Future;
+use Amp\Socket\ServerSocket;
 use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
 use Ostrolucky\Stdinho\Bufferer\PipeBufferer;
 use Ostrolucky\Stdinho\Bufferer\ResolvedBufferer;
@@ -21,7 +20,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use function Amp\asyncCoroutine;
+use function Amp\async;
+use function Amp\Socket\listen;
 
 class Command extends \Symfony\Component\Console\Command\Command
 {
@@ -37,7 +37,7 @@ class Command extends \Symfony\Component\Console\Command\Command
     protected function configure(): void
     {
         $this
-            ->addArgument('addressPort', InputArgument::OPTIONAL, 'The address:port to listen to', '0.0.0.0:*')
+            ->addArgument('addressPort', InputArgument::OPTIONAL, 'The address:port to listen to', '0.0.0.0')
             ->addOption(
                 'file',
                 'f',
@@ -111,12 +111,12 @@ class Command extends \Symfony\Component\Console\Command\Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $connectionsLimit = (float)$input->getOption('connections-limit');
-        $newConnDefer = new Deferred();
+        $newConnDefer = new DeferredFuture();
         $bufferer = $this->createBufferer(
             $output,
             $logger = new ConsoleLogger($firstSection = $output->section()),
-            $server = Server::listen($input->getArgument('addressPort')),
-            $newConnDefer->promise(),
+            $server = listen($input->getArgument('addressPort')),
+            $newConnDefer->getFuture(),
             $input->getOption('file'),
             $input->getOption('buffer-size'),
         );
@@ -125,21 +125,25 @@ class Command extends \Symfony\Component\Console\Command\Command
             "<info>Connection opened at http://{$server->getAddress()}\nPress CTRL+C to exit.</info>\n"
         );
 
-        Loop::run(function() use ($newConnDefer, &$connectionsLimit, $server, $logger, $output, $bufferer) {
-            asyncCoroutine($bufferer)();
+        async($bufferer(...));
 
-            while ($connectionsLimit-- && ($socket = yield $server->accept())) {
-                $responder = new Responder(
+        $futures = [];
+
+        while ($connectionsLimit-- && ($socket = $server->accept())) {
+            $futures[] = async(
+                (new Responder(
                     $logger,
                     $bufferer,
                     $output,
                     $this->customHttpHeaders,
-                    new ResourceInputStream(fopen($bufferer->filePath, 'rb')),
+                    new ReadableResourceStream(fopen($bufferer->filePath, 'rb')),
                     $newConnDefer
-                );
-                asyncCoroutine($responder)($socket);
-            }
-        });
+                ))->__invoke(...),
+                $socket,
+            );
+        }
+
+        Future\awaitAll($futures);
 
         return 0;
     }
@@ -147,8 +151,8 @@ class Command extends \Symfony\Component\Console\Command\Command
     private function createBufferer(
         ConsoleOutput $output,
         LoggerInterface $logger,
-        Server $server,
-        Promise $promiseThatIsResolvedWhenSomebodyConnects,
+        ServerSocket $server,
+        Future $promiseThatIsResolvedWhenSomebodyConnects,
         ?string $filePath,
         ?string $bufferSize
     ): AbstractBufferer {
@@ -157,10 +161,10 @@ class Command extends \Symfony\Component\Console\Command\Command
         }
 
         return new PipeBufferer(
-            new ResourceInputStream(STDIN),
+            new ReadableResourceStream(STDIN),
             $output->section(),
             $logger,
-            new ResourceOutputStream($filePath ? fopen($filePath, 'wb') : tmpfile()),
+            new WritableResourceStream($filePath ? fopen($filePath, 'wb') : tmpfile()),
             $server,
             $promiseThatIsResolvedWhenSomebodyConnects,
             (int)($bufferSize ?? disk_free_space($filePath ?: sys_get_temp_dir()) * .9)

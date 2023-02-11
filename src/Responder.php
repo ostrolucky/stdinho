@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho;
 
-use Amp\ByteStream\InputStream;
+use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\StreamException;
-use Amp\Deferred;
+use Amp\DeferredFuture;
 use Amp\Socket\Socket;
 use Error;
 use Ostrolucky\Stdinho\Bufferer\AbstractBufferer;
@@ -23,20 +23,20 @@ class Responder
         private AbstractBufferer $bufferer,
         private ConsoleOutput $consoleOutput,
         private array $customHttpHeaders,
-        private InputStream $inputStream,
-        private Deferred $defererThatIsResolvedWhenSomebodyConnects
+        private ReadableStream $inputStream,
+        private DeferredFuture $defererThatIsResolvedWhenSomebodyConnects
     ) {
     }
 
-    public function __invoke(Socket $socket): \Generator
+    public function __invoke(Socket $socket): void
     {
         $remoteAddress = (string)$socket->getRemoteAddress();
-        $this->logger->debug("Accepted connection from $remoteAddress:\n".trim(yield $socket->read()));
+        $this->logger->debug("Accepted connection from $remoteAddress:\n".trim($socket->read()));
 
         $header = [
             'HTTP/1.1 200 OK',
             'Content-Disposition: inline; filename="'.basename($this->bufferer->filePath).'"',
-            'Content-Type:'.yield $this->bufferer->getMimeType(),
+            'Content-Type:'.$this->bufferer->getMimeType()->await(),
             'Connection: close',
         ];
 
@@ -47,7 +47,7 @@ class Responder
         // Only at this point it's safe to resolve the promise, otherwise Responder
         // would think everything was buffered and specify wrong content length!
         try {
-            $this->defererThatIsResolvedWhenSomebodyConnects->resolve();
+            $this->defererThatIsResolvedWhenSomebodyConnects->complete();
         } catch (Error $e) {
             // Promise might have been already resolved
         }
@@ -60,8 +60,8 @@ class Responder
         );
 
         try {
-            yield $socket->write(implode("\r\n", array_merge($header, $this->customHttpHeaders))."\r\n\r\n");
-            yield from $this->write($socket, $progressBar);
+            $socket->write(implode("\r\n", array_merge($header, $this->customHttpHeaders))."\r\n\r\n");
+            $this->write($socket, $progressBar);
             $progressBar->finish();
             $this->logger->debug("$remoteAddress finished download");
         } catch (StreamException $exception) {
@@ -72,7 +72,7 @@ class Responder
         $socket->end();
     }
 
-    private function write(Socket $socket, ProgressBar $progressBar): \Generator
+    private function write(Socket $socket, ProgressBar $progressBar): void
     {
         while (true) {
             $buffererProgress = $this->bufferer->getCurrentProgress();
@@ -87,13 +87,13 @@ class Responder
              * @see https://github.com/amphp/byte-stream/issues/47
              */
             if ($buffererProgress <= $progressBar->getProgress() && $this->bufferer->isBuffering()) {
-                yield $this->bufferer->waitForWrite();
+                $this->bufferer->waitForWrite()->await();
 
                 continue;
             }
 
-            if (null !== $chunk = yield $this->inputStream->read()) {
-                yield $socket->write($chunk);
+            if (null !== $chunk = $this->inputStream->read()) {
+                $socket->write($chunk);
 
                 $progressBar->setMaxSteps($this->bufferer->getCurrentProgress());
                 $progressBar->advance(strlen($chunk));

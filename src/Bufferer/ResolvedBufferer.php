@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Ostrolucky\Stdinho\Bufferer;
 
-use Amp\Promise;
-use Amp\Success;
+use Amp\Future;
 
 class ResolvedBufferer extends AbstractBufferer
 {
@@ -19,9 +18,8 @@ class ResolvedBufferer extends AbstractBufferer
         $this->mimeType = (new \finfo(FILEINFO_MIME))->file($filePath);
     }
 
-    public function __invoke(): Promise
+    public function __invoke(): void
     {
-        return new Success();
     }
 
     public function isBuffering(): bool
@@ -29,14 +27,14 @@ class ResolvedBufferer extends AbstractBufferer
         return false;
     }
 
-    public function waitForWrite(): Promise
+    public function waitForWrite(): Future
     {
-        return new Success();
+        return Future::complete();
     }
 
-    public function getMimeType(): Promise
+    public function getMimeType(): Future
     {
-        return new Success($this->mimeType);
+        return Future::complete($this->mimeType);
     }
 
     public function getCurrentProgress(): int
