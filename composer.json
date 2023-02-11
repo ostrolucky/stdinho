@@ -24,9 +24,9 @@
         "amphp/dns": "^2",
         "amphp/http-client": "^v5.0.0-beta.8",
         "amphp/process": "^2",
-        "phpunit/php-code-coverage": ">=9.0",
-        "phpunit/phpcov": ">=5.0",
-        "phpunit/phpunit": ">=7.5"
+        "mockery/mockery": "^1.5",
+        "phpunit/php-code-coverage": "^9",
+        "phpunit/phpunit": "^9"
     },
     "minimum-stability": "beta",
     "autoload": {
