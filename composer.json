@@ -22,13 +22,15 @@
     },
     "require-dev": {
         "amphp/dns": "^2",
-        "amphp/http-client": "^v5.0.0-beta.8",
+        "amphp/http": "^2.1",
+        "amphp/http-client": "^5",
         "amphp/process": "^2",
         "mockery/mockery": "^1.5",
-        "phpunit/php-code-coverage": "^9",
-        "phpunit/phpunit": "^9"
+        "phpunit/php-code-coverage": "^10",
+        "phpunit/phpunit": "^10.5",
+        "seec/phpunit-consecutive-params": "^1.1"
     },
-    "minimum-stability": "beta",
+    "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
             "Ostrolucky\\Stdinho\\": "src"

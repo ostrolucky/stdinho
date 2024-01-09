@@ -17,6 +17,7 @@ use Ostrolucky\Stdinho\Responder;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use SEEC\PhpUnit\Helper\ConsecutiveParams;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
@@ -24,6 +25,8 @@ use function Amp\async;
 
 class IntegrationTest extends TestCase
 {
+    use ConsecutiveParams;
+
     public function testBufferOverflow(): void
     {
         $buffererInput = $this->createMock(ReadableStream::class);
@@ -54,7 +57,7 @@ class IntegrationTest extends TestCase
         $socket
             ->expects(static::exactly(4))
             ->method('write')
-            ->withConsecutive([Assert::stringContains('HTTP/1.1 200 OK')], [$foo], [$bar], [$baz])
+            ->with(...$this->withConsecutive([Assert::stringContains('HTTP/1.1 200 OK')], [$foo], [$bar], [$baz]))
         ;
 
         $logger->expects(self::once())->method('warning')->with(self::stringStartsWith('Max buffer size reached'));
