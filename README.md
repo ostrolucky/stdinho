@@ -8,7 +8,10 @@
 `stdinho` is small command-line tool that creates TCP server, accepts any STDOUT as its STDIN and whoever connects to the server will get this data served as HTTP response.
 
 It was written from frustration of having to share remote resources with my under-priviliged colleagues on semi-regular basis.
-This typically involves downloading file, uploading file, sending the link, waiting until target finishes downloading file, deleting file. In each stage of the process you would normally have to wait.
+This typically involves downloading file, uploading file, sending the link, waiting until target finishes downloading file, deleting file. 
+In each stage of the process you would normally have to wait.
+
+Diagram below compares the usual approach from above (having to wait in each stage) vs. streaming approach stdinho provides.
 
 ![stdinho animation](https://user-images.githubusercontent.com/496233/47866950-750db900-de00-11e8-8631-d25d723128f5.gif)
 
