@@ -50,7 +50,7 @@ class IntegrationTest extends TestCase
         $section->method('getFormatter')->willReturn($outputFormatter);
         $socket->method('read')->willReturn('');
         $socket->method('getRemoteAddress')->willReturn($this->createMock(SocketAddress::class));
-        $buffererInput->method('read')->willReturnOnConsecutiveCalls($foo = 'foo', $bar = 'bar', $baz = 'baz');
+        $buffererInput->method('read')->willReturnOnConsecutiveCalls($foo = 'foo', $bar = 'bar', $baz = 'baz', null);
         $buffererOutput->expects(static::exactly(1))->method('write');
         $responderInputStream->expects(static::exactly(2))->method('read')->willReturnOnConsecutiveCalls($foo, null);
 
