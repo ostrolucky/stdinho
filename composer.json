@@ -26,8 +26,8 @@
         "amphp/http-client": "^5",
         "amphp/process": "^2",
         "mockery/mockery": "^1.5",
-        "phpunit/php-code-coverage": "^10",
-        "phpunit/phpunit": "^10.5",
+        "phpunit/php-code-coverage": "^10 || ^11",
+        "phpunit/phpunit": "^10.5 || ^11",
         "seec/phpunit-consecutive-params": "^1.1"
     },
     "minimum-stability": "stable",
